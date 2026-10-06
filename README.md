@@ -5,6 +5,13 @@
 - Движок: **Godot 4.5.2** (зафиксирован; смена версии — отдельная задача миграции), typed GDScript
 - Renderer: **Compatibility** (OpenGL ES 3.0), внутреннее разрешение 360×640, nearest-фильтрация, integer scaling
 - Контент полностью data-driven (`game/data/*.json`), сохранения версионированы, игра работает без сети
+- Пять играбельных героев (воин, маг, хилл, лучник, охотник) со своей атакой и навыком; игра на русском
+
+## Скриншоты
+
+| Меню | Выбор героя | Бой (навык мага) | Повышение уровня | Босс |
+|---|---|---|---|---|
+| ![Меню](docs/screenshots/01_menu.png) | ![Выбор героя](docs/screenshots/02_heroes.png) | ![Бой](docs/screenshots/03_battle.png) | ![Повышение уровня](docs/screenshots/04_level_up.png) | ![Босс](docs/screenshots/05_boss.png) |
 
 ## Структура репозитория
 
@@ -61,9 +68,9 @@ CI (`.github/workflows/build.yml`): на каждый push/PR — тесты и 
 
 ## Графика
 
-- Референс стиля: `docs/art/reference/heroes_keyart.png`; ТЗ на графику для художника: `docs/art/ART_BRIEF.md`.
-- Палитра UI взята из референса (`game/scripts/ui/ui_kit.gd`, `docs/art/palette.json`).
-- Баннер меню, портреты и эмблемы классов нарезаются из референса: `godot --headless --script tools/art/import_keyart.gd` (координаты — `tools/art/keyart_regions.json`).
+- **Стиль v2** (действующий): содержание — фэнтези с ключарта `docs/art/reference/heroes_keyart.png`, отрисовка и интерфейс — по `docs/art/reference/style_target_base.png` (тёплый свет, мягкий коричневый контур, таблички-«пергамент», панель счётчиков). Решения — `docs/decisions/2026-10-06-art-style-v2.md`, ТЗ для художника — `docs/art/ART_BRIEF.md`.
+- Игровой арт генерируется кодом: `python3 tools/art/generate_sprites.py` (подробности и упрощения — `docs/art/GENERATED_ART.md`). Декор уровней расставляется по данным (`decor` в `levels.json`), тени рисует код.
+- Баннер меню, портреты и эмблемы классов нарезаются из ключарта: `godot --headless --script tools/art/import_keyart.gd` (координаты — `tools/art/keyart_regions.json`).
 
 ## Агенты Claude Code
 

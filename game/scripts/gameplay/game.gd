@@ -44,6 +44,11 @@ func _ready() -> void:
 	add_child(background)
 	RenderingServer.set_default_clear_color(level.background)
 
+	var ground_decor := Node2D.new()
+	ground_decor.name = "GroundDecor"
+	ground_decor.z_index = -9
+	add_child(ground_decor)
+
 	var pickups := Node2D.new()
 	pickups.name = "Pickups"
 	pickups.z_index = -1
@@ -60,6 +65,8 @@ func _ready() -> void:
 	vfx.name = "Vfx"
 	vfx.z_index = 6
 	add_child(vfx)
+
+	LevelDecorator.decorate(level, ground_decor, entities)
 
 	player = PLAYER_SCENE.instantiate()
 	player.position = level.player_spawn()

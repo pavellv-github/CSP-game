@@ -62,6 +62,7 @@ func setup(character: CharacterDefinition, arena_bounds: Rect2) -> void:
 	controller.setup(self)
 
 	sprite.setup(character.sheet)
+	GroundShadow.attach(self, character.collision_radius * 2.6)
 	(($CollisionShape2D as CollisionShape2D).shape as CircleShape2D).radius = character.collision_radius
 	EventBus.player_health_changed.emit(health.current, health.max_health)
 

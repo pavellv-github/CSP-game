@@ -37,6 +37,7 @@ func setup(enemy: EnemyDefinition, player: CombatEntity, arena_bounds: Rect2, hp
 	health.died.connect(_on_died)
 	(collision.shape as CircleShape2D).radius = enemy.collision_radius
 	sprite.setup(enemy.sheet)
+	GroundShadow.attach(self, enemy.collision_radius * 2.6)
 	ai = AiFactory.create(enemy.ai_type)
 	ai.name = "AI"
 	add_child(ai)

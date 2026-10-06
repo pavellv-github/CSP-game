@@ -5,7 +5,7 @@ const State := preload("res://scripts/core/game_state_manager.gd").State
 
 
 func _build() -> void:
-	content.add_child(UiKit.title(Loc.t("HERO_TITLE")))
+	content.add_child(UiKit.plaque(Loc.t("HERO_TITLE")))
 	content.add_child(UiKit.label(Loc.t("COMMON_GOLD") % Profile.get_gold(), 10, UiKit.ACCENT, HORIZONTAL_ALIGNMENT_CENTER))
 	var selected_id := Profile.get_selected_character_id()
 	for definition in Content.characters.get_all():

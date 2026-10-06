@@ -25,7 +25,7 @@ func set_choices(upgrades: Array[UpgradeDefinition], owned_levels: Dictionary, l
 
 func refresh() -> void:
 	clear_body()
-	body.add_child(UiKit.title(Loc.t("LEVEL_UP_TITLE") % player_level))
+	body.add_child(UiKit.plaque(Loc.t("LEVEL_UP_TITLE") % player_level))
 	body.add_child(UiKit.label(Loc.t("LEVEL_UP_CHOOSE"), 10, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	for upgrade in choices:
 		var level := int(owned.get(upgrade.id, 0))

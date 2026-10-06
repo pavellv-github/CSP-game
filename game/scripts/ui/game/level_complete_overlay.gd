@@ -12,7 +12,7 @@ func _init() -> void:
 func refresh() -> void:
 	clear_body()
 	var summary := GameManager.last_run_summary
-	body.add_child(UiKit.title(Loc.t("VICTORY_TITLE")))
+	body.add_child(UiKit.plaque(Loc.t("VICTORY_TITLE")))
 	body.add_child(UiKit.label(Loc.t("VICTORY_SUMMARY") % [
 		UiKit.format_time(float(summary.get("time", 0.0))), int(summary.get("kills", 0)), int(summary.get("player_level", 1))],
 		10, UiKit.TEXT, HORIZONTAL_ALIGNMENT_CENTER))

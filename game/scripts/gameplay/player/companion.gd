@@ -46,6 +46,7 @@ static func create(summoner: CombatEntity, params: Dictionary, owner_damage: flo
 
 func _ready() -> void:
 	_sprite.setup(_sheet)
+	GroundShadow.attach(self, 12.0)
 
 
 func _physics_process(delta: float) -> void:

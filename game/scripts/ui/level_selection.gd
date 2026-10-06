@@ -4,7 +4,7 @@ const State := preload("res://scripts/core/game_state_manager.gd").State
 
 
 func _build() -> void:
-	content.add_child(UiKit.title(Loc.t("LEVELS_TITLE")))
+	content.add_child(UiKit.plaque(Loc.t("LEVELS_TITLE")))
 	var character := Content.get_character(Profile.get_selected_character_id())
 	if character != null:
 		content.add_child(UiKit.label(Loc.t("LEVELS_HERO") % Loc.name_of(character), 10, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))

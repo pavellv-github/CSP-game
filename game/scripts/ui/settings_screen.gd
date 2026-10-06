@@ -6,7 +6,7 @@ var _reset_armed := false
 
 
 func _build() -> void:
-	content.add_child(UiKit.title(Loc.t("SETTINGS_TITLE")))
+	content.add_child(UiKit.plaque(Loc.t("SETTINGS_TITLE")))
 	content.add_child(_slider(Loc.t("SETTINGS_MUSIC"), "music_volume"))
 	content.add_child(_slider(Loc.t("SETTINGS_SOUND"), "sfx_volume"))
 	content.add_child(_toggle(Loc.t("SETTINGS_AUTO_ATTACK"), "auto_attack"))

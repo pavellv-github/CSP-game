@@ -10,7 +10,7 @@ func _init() -> void:
 
 func refresh() -> void:
 	clear_body()
-	body.add_child(UiKit.title(Loc.t("PAUSE_TITLE")))
+	body.add_child(UiKit.plaque(Loc.t("PAUSE_TITLE")))
 	body.add_child(UiKit.button(Loc.t("PAUSE_RESUME"), _resume, 34))
 	body.add_child(UiKit.button(Loc.t("PAUSE_LEAVE"), func() -> void:
 		Profile.flush()

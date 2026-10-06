@@ -17,6 +17,8 @@ var boss: String = ""
 ## [{item_id, quantity}]
 var rewards: Array[Dictionary] = []
 var unlock_condition: Dictionary = {}
+## Scattered decor: [{sprite, count, layer: "ground" | "object", min_spacing}] (LevelDecorator)
+var decor: Array[Dictionary] = []
 
 
 func _parse(d: Dictionary) -> void:
@@ -35,6 +37,7 @@ func _parse(d: Dictionary) -> void:
 	boss = str(d.get("boss", ""))
 	rewards = to_dict_array(d.get("rewards", []))
 	unlock_condition = d.get("unlock_condition", {})
+	decor = to_dict_array(d.get("decor", []))
 
 
 func player_spawn() -> Vector2:
@@ -48,4 +51,7 @@ func validate() -> Array[String]:
 	for group: Dictionary in enemy_groups:
 		if float(group.get("interval", 0)) <= 0.0:
 			errors.append("%s: enemy group '%s' needs interval > 0" % [id, group.get("enemy_id", "?")])
+	for entry in decor:
+		if not ResourceLoader.exists(str(entry.get("sprite", ""))):
+			errors.append("%s: missing decor sprite '%s'" % [id, entry.get("sprite", "")])
 	return errors

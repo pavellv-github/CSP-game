@@ -22,6 +22,7 @@ var _banner: Label
 var _skill_button: TouchButton
 var _dash_button: TouchButton
 var _kills := 0
+var _health_tween: Tween
 var _player: Player
 
 
@@ -78,6 +79,7 @@ func _build_top_bar() -> void:
 	var bars := UiKit.vbox(2)
 	bars.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_health_bar = UiKit.bar(UiKit.HEALTH, 8)
+	_health_bar.step = 0.0
 	_health_label = UiKit.label("", 8, UiKit.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
 	_health_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_health_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -96,18 +98,23 @@ func _build_top_bar() -> void:
 	row.add_child(pause)
 	column.add_child(row)
 
-	var info := UiKit.hbox(8)
-	_level_label = UiKit.label(Loc.t("HUD_LEVEL") % 1, 8, UiKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT, false)
-	_timer_label = UiKit.label("0:00", 10, UiKit.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
-	_timer_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_kills_label = UiKit.label("0", 8, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_LEFT, false)
-	_gold_label = UiKit.label("0", 8, UiKit.ACCENT, HORIZONTAL_ALIGNMENT_LEFT, false)
-	info.add_child(_level_label)
-	info.add_child(_timer_label)
-	info.add_child(UiKit.label(Loc.t("HUD_KILLS"), 8, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_LEFT, false))
-	info.add_child(_kills_label)
-	info.add_child(UiKit.icon("res://assets/sprites/items/gold_coin.png", 8))
-	info.add_child(_gold_label)
+	# Counters on dark pills, like the resource bar of the style target.
+	var info := UiKit.hbox(4)
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var level_pill := UiKit.pill(HUD_ICON_DIR + "level.png", Loc.t("HUD_LEVEL") % 1)
+	var timer_pill := UiKit.pill(HUD_ICON_DIR + "timer.png", "0:00")
+	var kills_pill := UiKit.pill(HUD_ICON_DIR + "kills.png", "0")
+	var gold_pill := UiKit.pill(HUD_ICON_DIR + "gold.png", "0")
+	_level_label = UiKit.pill_label(level_pill)
+	_timer_label = UiKit.pill_label(timer_pill)
+	_kills_label = UiKit.pill_label(kills_pill)
+	_gold_label = UiKit.pill_label(gold_pill)
+	_gold_label.add_theme_color_override("font_color", UiKit.ACCENT)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for node: Control in [level_pill, timer_pill, spacer, kills_pill, gold_pill]:
+		info.add_child(node)
 	column.add_child(info)
 
 	_boss_box = UiKit.vbox(1)
@@ -182,7 +189,10 @@ func _hud_icon(icon_name: String) -> Texture2D:
 
 func _on_health_changed(current: int, maximum: int) -> void:
 	_health_bar.max_value = maximum
-	_health_bar.value = current
+	if _health_tween != null:
+		_health_tween.kill()
+	_health_tween = create_tween()
+	_health_tween.tween_property(_health_bar, "value", float(current), 0.2).set_ease(Tween.EASE_OUT)
 	_health_label.text = "%d / %d" % [current, maximum]
 
 

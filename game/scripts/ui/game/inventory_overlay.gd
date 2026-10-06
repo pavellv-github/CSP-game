@@ -13,7 +13,7 @@ func _init() -> void:
 
 func refresh() -> void:
 	clear_body()
-	body.add_child(UiKit.title(Loc.t("BAG_TITLE")))
+	body.add_child(UiKit.plaque(Loc.t("BAG_TITLE")))
 	body.add_child(UiKit.label(Loc.t("COMMON_GOLD") % Profile.get_gold(), 10, UiKit.ACCENT, HORIZONTAL_ALIGNMENT_CENTER))
 	var entries := Profile.get_inventory()
 	if entries.is_empty():
