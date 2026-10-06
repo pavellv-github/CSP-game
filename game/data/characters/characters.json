@@ -28,6 +28,7 @@
 			"crit_chance": 0.05,
 			"crit_multiplier": 1.5,
 			"pickup_radius": 40,
+			"collision_radius": 6,
 			"skills": [
 				"skill_heavy_strike"
 			],

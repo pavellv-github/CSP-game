@@ -60,11 +60,12 @@ func setup(character: CharacterDefinition, arena_bounds: Rect2) -> void:
 	controller.setup(self)
 
 	sprite.setup(character.sheet)
+	(($CollisionShape2D as CollisionShape2D).shape as CircleShape2D).radius = character.collision_radius
 	EventBus.player_health_changed.emit(health.current, health.max_health)
 
 
 func get_radius() -> float:
-	return 5.0
+	return definition.collision_radius if definition != null else 5.0
 
 
 func _physics_process(delta: float) -> void:

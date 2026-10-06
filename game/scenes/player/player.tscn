@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://scripts/gameplay/player/player_controller.gd" id="9"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+resource_local_to_scene = true
 radius = 5.0
 
 [node name="Player" type="CharacterBody2D"]

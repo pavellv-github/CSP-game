@@ -47,7 +47,7 @@
 			"experience_reward": 3,
 			"loot_table": "loot_common",
 			"ai_type": "chase",
-			"collision_radius": 5
+			"collision_radius": 6
 		},
 		{
 			"id": "enemy_skeleton",
@@ -97,7 +97,7 @@
 			"loot_table": "loot_slime",
 			"ai_type": "passive",
 			"aggro_radius": 70,
-			"collision_radius": 6
+			"collision_radius": 7
 		},
 		{
 			"id": "enemy_forest_guardian",
@@ -123,7 +123,7 @@
 			"experience_reward": 120,
 			"loot_table": "loot_boss",
 			"ai_type": "boss",
-			"collision_radius": 11,
+			"collision_radius": 15,
 			"is_boss": true
 		}
 	]

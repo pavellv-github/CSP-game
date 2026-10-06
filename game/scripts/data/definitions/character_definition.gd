@@ -20,6 +20,7 @@ var attack_arc_degrees: float = 120.0
 var crit_chance: float = 0.0
 var crit_multiplier: float = 1.5
 var pickup_radius: float = 40.0
+var collision_radius: float = 5.0
 var skills: Array[String] = []
 var unlock_condition: Dictionary = {}
 
@@ -42,6 +43,7 @@ func _parse(d: Dictionary) -> void:
 	crit_chance = float(d.get("crit_chance", crit_chance))
 	crit_multiplier = float(d.get("crit_multiplier", crit_multiplier))
 	pickup_radius = float(d.get("pickup_radius", pickup_radius))
+	collision_radius = float(d.get("collision_radius", collision_radius))
 	skills = to_string_array(d.get("skills", []))
 	unlock_condition = d.get("unlock_condition", {})
 
