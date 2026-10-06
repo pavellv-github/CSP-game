@@ -3,7 +3,7 @@ extends CombatEntity
 ## The player is a set of components; this script only wires them together.
 ## All numbers come from CharacterDefinition + upgrades, nothing is hardcoded per character.
 
-signal attack_performed(direction: Vector2, attack_range: float)
+signal attack_performed(direction: Vector2, attack_range: float, is_melee: bool)
 signal skill_performed(skill: SkillDefinition, origin: Vector2, radius: float)
 
 const HIT_INVULNERABILITY := 0.35
@@ -45,12 +45,14 @@ func setup(character: CharacterDefinition, arena_bounds: Rect2) -> void:
 	health.died.connect(_on_died)
 
 	movement.setup(self, stats)
-	combat.setup(self, stats, character.attack_arc_degrees)
+	combat.setup(self, stats, character)
 	combat.damage_multiplier = config.get_float("balance.player_damage_multiplier", 1.0)
 	combat.auto_attack = bool(Profile.get_setting("auto_attack", true)) and config.is_feature_enabled("auto_attack")
-	combat.attacked.connect(func(direction: Vector2, attack_range: float) -> void:
+	combat.attacked.connect(func(direction: Vector2, attack_range: float, is_melee: bool) -> void:
 		sprite.play_once(&"attack")
-		attack_performed.emit(direction, attack_range))
+		if absf(direction.x) > 0.1:
+			sprite.flip_h = direction.x < 0.0
+		attack_performed.emit(direction, attack_range, is_melee))
 	skills.setup(self, stats, character.skills)
 	skills.damage_multiplier = combat.damage_multiplier
 	skills.skill_activated.connect(func(skill: SkillDefinition, origin: Vector2, radius: float) -> void:
@@ -72,6 +74,7 @@ func _physics_process(delta: float) -> void:
 	if not is_alive() or definition == null:
 		return
 	movement.physics_step(delta)
+	skills.facing = movement.facing
 	combat.physics_step(delta)
 	skills.physics_step(delta)
 	_animate(delta)

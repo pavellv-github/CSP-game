@@ -2,7 +2,7 @@
 """Pixel Fantasy Survival - procedural pixel-art generator (P0 art set).
 
 Everything is drawn pixel by pixel at native resolution from one master
-palette (32 colours) and written as PNG with zlib + struct (stdlib only).
+palette (38 colours) and written as PNG with zlib + struct (stdlib only).
 
     python3 tools/art/generate_sprites.py              # regenerate all game assets
     python3 tools/art/generate_sprites.py --preview DIR  # also write upscaled previews
@@ -66,19 +66,26 @@ PALETTE: dict[str, str] = {
     # ground-only tones: deliberately close to their neighbours so floors stay calm
     "G": "28422b",  # grass ground shade (next to u)
     "H": "33363f",  # cave ground shade (next to m)
+    # arcane purple ramp (mage robe, arcane bolt / blast) - added with the playable mage
+    "K": "241a33",  # purple 1 (darkest)
+    "L": "3b2c58",  # purple 2
+    "M": "5f4a8e",  # purple 3
+    "N": "a48ad8",  # violet glow
 }
-assert len(PALETTE) == 34  # 32 sprite colours + 2 low-contrast ground tones
+assert len(PALETTE) == 38  # 32 sprite colours + 2 low-contrast ground tones + 4 arcane purples
 RGBA = {k: (int(v[0:2], 16), int(v[2:4], 16), int(v[4:6], 16), 255) for k, v in PALETTE.items()}
 
 # Ramps: one step darker / lighter inside the same material.
 DARKER = {"d": "c", "c": "b", "b": "a", "a": "k", "k": "o", "g": "f", "f": "e", "e": "k",
           "j": "i", "i": "h", "h": "e", "p": "n", "n": "m", "m": "D", "D": "o", "s": "r", "r": "q",
           "q": "a", "x": "w", "w": "v", "v": "u", "u": "t", "t": "o", "G": "t", "H": "D", "z": "y", "y": "n", "W": "z",
-          "S": "R", "R": "k", "C": "B", "B": "A", "A": "D", "o": "o"}
+          "S": "R", "R": "k", "C": "B", "B": "A", "A": "D", "o": "o",
+          "N": "M", "M": "L", "L": "K", "K": "o"}
 LIGHTER = {"o": "k", "k": "a", "a": "b", "b": "c", "c": "d", "d": "j", "e": "f", "f": "g", "g": "s",
            "h": "i", "i": "j", "j": "W", "D": "m", "m": "n", "n": "p", "p": "W", "q": "r", "r": "s",
            "s": "W", "t": "u", "G": "u", "H": "m", "u": "v", "v": "w", "w": "x", "x": "s", "y": "z", "z": "W", "W": "W",
-           "R": "S", "S": "g", "A": "B", "B": "C", "C": "W"}
+           "R": "S", "S": "g", "A": "B", "B": "C", "C": "W",
+           "K": "L", "L": "M", "M": "N", "N": "W"}
 
 LIGHT = (-0.6, -0.8)  # light from top-left
 
@@ -996,6 +1003,807 @@ def guardian_sheet() -> Canvas:
 
 
 # ======================================================================================
+# PLAYABLE HEROES 32x32: mage, healer, archer, hunter (exactly the warrior layout)
+# Same construction as the warrior: parts stamped from ASCII maps, posed by parameters,
+# drawn on the foot row H_FOOT (=W_FOOT), outlined by finish(), lifted 1 px by build_sheet.
+# ======================================================================================
+H_FOOT = 30
+
+
+def robe(c: Canvas, cx: float, top: int, bottom: int, hw0: float, hw1: float, ramp: str,
+         lean: int = 0, sway: float = 0.0, power: float = 1.4) -> dict[int, tuple[int, int]]:
+    """Bell-shaped robe lit from the left. ramp = dark, mid, lit. Returns row extents."""
+    rows = {}
+    for y in range(top, bottom + 1):
+        t = (y - top) / max(1, bottom - top)
+        hw = hw0 + (hw1 - hw0) * t ** power
+        mid = cx + lean * (1 - t) + sway * t
+        x0, x1 = round(mid - hw), round(mid + hw)
+        for x in range(x0, x1 + 1):
+            u = (x - x0) / max(1, x1 - x0)
+            c.set(x, y, ramp[2] if u < 0.28 else (ramp[1] if u < 0.7 else ramp[0]))
+        rows[y] = (x0, x1)
+    return rows
+
+
+def sleeve(c: Canvas, sx: float, sy: float, hx: float, hy: float, dark: str, lit: str,
+           cuff: str | None = None, hand: str = "i") -> None:
+    """Two-pixel arm from shoulder to hand; cuff colour right before the hand."""
+    c.line(sx, sy, hx, hy, dark)
+    c.line(sx, sy - 1, hx, hy - 1, lit)
+    if cuff:
+        L = max(1.0, math.hypot(hx - sx, hy - sy))
+        ux, uy = (hx - sx) / L, (hy - sy) / L
+        c.set(round(hx - ux * 1.2), round(hy - uy * 1.2), cuff)
+        c.set(round(hx - ux * 1.2), round(hy - uy * 1.2) - 1, cuff)
+    c.set(hx, hy, hand)
+
+
+def staff_end(hx: float, hy: float, ang: float, up: float) -> tuple[int, int]:
+    t = math.radians(ang)
+    return round(hx + math.cos(t) * up), round(hy + math.sin(t) * up)
+
+
+def draw_staff(c: Canvas, hx: float, hy: float, ang: float, up: float, down: float,
+               shaft: str = "c", hi: str = "d") -> tuple[int, int]:
+    t = math.radians(ang)
+    dx, dy = math.cos(t), math.sin(t)
+    c.line(hx - dx * down, hy - dy * down, hx + dx * up, hy + dy * up, shaft)
+    for k in (2, 5):  # lit knots on the upper part of the shaft
+        c.set(round(hx + dx * (up - k)), round(hy + dy * (up - k)), hi)
+    return staff_end(hx, hy, ang, up)
+
+
+def draw_crystal(c: Canvas, x: int, y: int, glow: int = 0) -> None:
+    """Blue crystal in a gold claw, centre (x, y)."""
+    for (dx, dy, col) in ((0, -2, "C"), (-1, -1, "C"), (0, -1, "W"), (1, -1, "B"), (-1, 0, "B"), (0, 0, "C"),
+                          (1, 0, "A"), (-1, 1, "B"), (0, 1, "B"), (1, 1, "A"), (0, 2, "A"),
+                          (-2, 1, "r"), (2, 1, "q"), (-2, 0, "s"), (2, 0, "r"), (-1, 3, "q"), (1, 3, "q"), (0, 3, "r")):
+        c.set(x + dx, y + dy, col)
+    if glow >= 1:
+        for (dx, dy, col) in ((0, -4, "N"), (-3, -2, "N"), (3, -2, "N"), (-4, 1, "M"), (4, 1, "M")):
+            c.set(x + dx, y + dy, col)
+    if glow >= 2:
+        c.set(x, y - 1, "W")
+        c.set(x, y, "W")
+        for (dx, dy, col) in ((0, -5, "W"), (-4, -3, "C"), (4, -3, "C"), (-2, -5, "N"), (2, -5, "N"),
+                              (-5, 0, "N"), (5, 0, "N")):
+            c.set(x + dx, y + dy, col)
+
+
+def draw_cross(c: Canvas, x: int, y: int, glow: int = 0) -> None:
+    """Green cross in a gold ring, centre (x, y)."""
+    for (dx, dy, col) in ((0, -2, "x"), (-1, -1, "r"), (0, -1, "x"), (1, -1, "q"), (-2, 0, "x"), (-1, 0, "x"),
+                          (0, 0, "W"), (1, 0, "w"), (2, 0, "w"), (-1, 1, "r"), (0, 1, "w"), (1, 1, "q"),
+                          (0, 2, "v"), (0, 3, "r")):
+        c.set(x + dx, y + dy, col)
+    if glow >= 1:
+        for (dx, dy, col) in ((0, -4, "s"), (-3, -2, "x"), (3, -2, "x"), (-4, 1, "s"), (4, 1, "s")):
+            c.set(x + dx, y + dy, col)
+    if glow >= 2:
+        c.set(x, y - 1, "W")
+        c.set(x - 1, y, "W")
+        for (dx, dy, col) in ((0, -5, "W"), (-4, -3, "W"), (4, -3, "W"), (-2, -5, "s"), (2, -5, "s"),
+                              (-5, 0, "x"), (5, 0, "x")):
+            c.set(x + dx, y + dy, col)
+
+
+def robe_feet(c: Canvas, cx: int, front_dx: int, back_dx: int, front_lift: int, back_lift: int,
+              col: str = "b", dark: str = "a") -> None:
+    """Boot toes peeking out under a robe hem (foot row H_FOOT)."""
+    bx = cx - 3 + back_dx
+    c.rect(bx, H_FOOT - back_lift, 3, 1, dark)
+    c.set(bx + 3, H_FOOT - back_lift, "k")
+    fx = cx + 1 + front_dx
+    c.rect(fx, H_FOOT - front_lift, 4, 1, col)
+    c.set(fx, H_FOOT - front_lift, dark)
+    c.set(fx + 3, H_FOOT - 1 - front_lift, col)
+
+
+# ---------------------------------------------------------------- MAGE
+# dark purple robe with gold trim, high collar, long dark hair and beard, staff with blue crystal
+MAGE_HEAD = [
+    "...kaaak..",
+    "..kaabaak.",
+    ".kabaaaabk",
+    "kaakkkiijk",
+    "kaakhijjji",
+    "kaahijjoji",
+    "kakhiijjjj",
+    "kakhiiiih.",
+    "kak.aaaaa.",
+    "kk..akaak.",
+    "......aa..",
+]
+MAGE_COLLAR = [
+    "LL.......",
+    "MLL......",
+    "MLLL.....",
+    "rMLLr....",
+]
+
+
+def mage(bob: int = 0, front_dx: int = 0, back_dx: int = 0, front_lift: int = 0, back_lift: int = 0,
+         hand: tuple[float, float] = (22, 19), staff: float = -90, staff_up: float = 15, staff_down: float = 10,
+         back_hand: tuple[float, float] | None = None, lean: int = 0, crouch: int = 0, sway: float = 0,
+         glow: int = 0, blink: bool = False, fx: str | None = None) -> Canvas:
+    c = Canvas(32, 32)
+    ub = bob + crouch
+    lx = lean
+    cx = 15
+    # back arm raised (cast) is behind the body
+    if back_hand:
+        sleeve(c, cx - 1 + lx, 16 + ub, back_hand[0] + lx, back_hand[1] + ub, "K", "L", cuff="r")
+    robe_feet(c, cx, front_dx, back_dx, front_lift, back_lift, col="b", dark="a")
+    rows = robe(c, cx + 0.5, 14 + ub, 29, 4.0, 7.6, "KLM", lean=lx, sway=sway)
+    # gold hem and front opening
+    for y in (28, 29):
+        x0, x1 = rows[y]
+        for x in range(x0, x1 + 1):
+            if y == 28:
+                c.set(x, y, "r" if x < x1 - 2 else "q")
+    for y in range(20 + ub, 28):
+        x0, x1 = rows[y]
+        ox = x0 + round((x1 - x0) * 0.66)
+        c.set(ox, y, "r" if y % 3 else "s")
+        c.set(ox + 1, y, "K")
+    # belt + pouch + crossed straps + blue amulet
+    yb = 20 + ub
+    x0, x1 = rows[yb]
+    for x in range(x0, x1 + 1):
+        c.set(x, yb, "b" if x < x1 - 1 else "a")
+    c.set(cx + 1 + lx, yb, "r")
+    c.rect(cx + 3 + lx, yb + 1, 2, 2, "c")
+    c.set(cx + 3 + lx, yb + 1, "d")
+    c.line(cx - 2 + lx, 15 + ub, cx + 2 + lx, 19 + ub, "a")
+    c.set(cx + lx, 16 + ub, "B")
+    c.set(cx + lx, 15 + ub, "r")
+    # high collar behind the head
+    c.stamp(MAGE_COLLAR, cx - 6 + lx, 10 + ub)
+    head = list(MAGE_HEAD)
+    if blink:
+        head[5] = "kaahiijjhi"
+    c.stamp(head, cx - 4 + lx, 4 + ub)
+    # staff + front sleeve (wide, purple, gold cuff)
+    hx, hy = hand[0] + lx, hand[1] + ub
+    tx, ty = draw_staff(c, hx, hy, staff, staff_up, staff_down)
+    sleeve(c, cx + 2 + lx, 16 + ub, hx, hy, "L", "M", cuff="r")
+    c.set(cx + 2 + lx, 17 + ub, "L")
+    c.set(cx + 3 + lx, 17 + ub, "L")
+    if back_hand:
+        c.set(back_hand[0] + lx, back_hand[1] + ub, "i")
+    draw_crystal(c, tx, ty, glow)
+    if fx == "spark":
+        for (dx, dy, col) in ((3, 0, "W"), (5, 0, "N"), (4, -2, "C"), (4, 2, "C")):
+            c.set(tx + dx, ty + dy, col)
+    if fx == "ground":
+        for (x, y, col) in ((6, 29, "N"), (9, 27, "C"), (25, 28, "N"), (28, 26, "C"), (12, 24, "W"), (27, 22, "W")):
+            c.set(x, y, col)
+    return c
+
+
+def mage_sheet() -> Canvas:
+    F = finish
+    idle = [F(mage(bob=b, blink=(i == 3), staff_up=15 - b)) for i, b in enumerate((0, 0, 1, 1))]
+    walk = []
+    for f in range(6):
+        p = f / 6 * 2 * math.pi
+        s = math.sin(p)
+        fd = round(1.6 * s)
+        bob = 0 if abs(s) > 0.6 else 1
+        walk.append(F(mage(bob=bob, front_dx=fd, back_dx=-fd, front_lift=0, back_lift=0, sway=-s * 0.8,
+                           hand=(22 + fd // 2, 19), staff=-90 + fd * 3, staff_up=15 - bob)))
+    attack = [
+        F(mage(hand=(19, 18), staff=-110, staff_up=13, staff_down=9, lean=-1, glow=1)),
+        F(mage(hand=(20, 17), staff=-70, staff_up=13, staff_down=8, glow=1, back_dx=-1, front_dx=1)),
+        F(mage(hand=(24, 17), staff=-40, staff_up=8, staff_down=8, lean=1, glow=2, fx="spark",
+               back_dx=-2, front_dx=2)),
+        F(mage(hand=(24, 17), staff=-45, staff_up=8, staff_down=8, lean=1, glow=1, back_dx=-2, front_dx=2)),
+        F(mage(hand=(22, 18), staff=-80, staff_up=14, staff_down=10, back_dx=-1, front_dx=1)),
+    ]
+    hurt = [F(flash(mage(lean=-1, hand=(21, 19), staff=-100))), F(mage(lean=-1, hand=(21, 19), staff=-100))]
+    pose = dict(hand=(21, 20), staff=-110, lean=-1)
+    death = fall_frames(mage, pose, H_FOOT, 15, [-35, -70, -90, -90], 32, 32,
+                        pre=[F(flash(mage(lean=-1, hand=(21, 19), staff=-100))),
+                             F(mage(crouch=2, lean=-1, hand=(21, 21), staff=-115, staff_down=5, staff_up=17))])
+    cast = [
+        F(mage(hand=(21, 16), staff=-90, staff_up=12, staff_down=10, back_hand=(19, 15), glow=1)),
+        F(mage(hand=(21, 13), staff=-90, staff_up=9, staff_down=11, back_hand=(19, 12), glow=2, bob=-1)),
+        F(mage(hand=(21, 13), staff=-90, staff_up=9, staff_down=11, back_hand=(19, 12), glow=2, bob=-1,
+               fx="ground")),
+        F(mage(hand=(21, 16), staff=-90, staff_up=12, staff_down=10, back_hand=(18, 16), glow=1)),
+    ]
+    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
+
+
+# ---------------------------------------------------------------- HEALER
+# white robe with a green front panel, green hooded mantle, dark curly hair, gold staff with green cross
+HEALER_HEAD = [
+    "..kaabak..",
+    ".kaabcaak.",
+    "kabbaabbak",
+    "kaabakijak",
+    "kbakhijjjk",
+    "kakhijjoj.",
+    "kakhiijjj.",
+    "kbakhiiih.",
+    "kak.hii...",
+    ".k........",
+]
+HEALER_MANTLE = [
+    "....uuuu....",
+    "..uvvwwvvu..",
+    ".uvwwwvvvuu.",
+    "tuvwvvvvvuut",
+    "tuvvvvvvuut.",
+    "tuuvvuuuut..",
+    "tuuuuttt....",
+    "tuuut.......",
+    "ttu.........",
+]
+
+
+def healer(bob: int = 0, front_dx: int = 0, back_dx: int = 0, front_lift: int = 0, back_lift: int = 0,
+           hand: tuple[float, float] = (21, 19), staff: float = -90, staff_up: float = 14, staff_down: float = 10,
+           back_hand: tuple[float, float] | None = None, lean: int = 0, crouch: int = 0, sway: float = 0,
+           glow: int = 0, blink: bool = False, fx: str | None = None) -> Canvas:
+    c = Canvas(32, 32)
+    ub = bob + crouch
+    lx = lean
+    cx = 15
+    robe_feet(c, cx, front_dx, back_dx, front_lift, back_lift, col="c", dark="b")
+    rows = robe(c, cx + 0.5, 15 + ub, 29, 3.6, 6.4, "yzW", lean=lx, sway=sway, power=1.2)
+    # green front panel with gold stitch, green hem
+    for y in range(21 + ub, 30):
+        x0, x1 = rows[y]
+        ox = x0 + round((x1 - x0) * 0.58)
+        c.set(ox, y, "v")
+        c.set(ox + 1, y, "u")
+        if y % 3 == 0:
+            c.set(ox, y, "r")
+    x0, x1 = rows[29]
+    for x in range(x0, x1 + 1):
+        c.set(x, 29, "v" if x < x1 - 2 else "u")
+    # gold belt + brown pouch
+    yb = 21 + ub
+    x0, x1 = rows[yb]
+    for x in range(x0, x1 + 1):
+        c.set(x, yb, "r" if x < x1 - 1 else "q")
+    c.rect(cx - 3 + lx, yb + 1, 2, 2, "c")
+    c.set(cx - 3 + lx, yb + 1, "d")
+    # green hooded mantle over the shoulders
+    c.stamp(HEALER_MANTLE, cx - 7 + lx, 12 + ub)
+    c.set(cx + 1 + lx, 15 + ub, "r")
+    if back_hand:  # raised back arm shows beside the head
+        sleeve(c, cx - 2 + lx, 15 + ub, back_hand[0] + lx, back_hand[1] + ub, "y", "z", cuff="v")
+    head = list(HEALER_HEAD)
+    if blink:
+        head[5] = "kabhiijji."
+    c.stamp(head, cx - 4 + lx, 5 + ub)
+    hx, hy = hand[0] + lx, hand[1] + ub
+    tx, ty = draw_staff(c, hx, hy, staff, staff_up, staff_down, shaft="q", hi="r")
+    sleeve(c, cx + 2 + lx, 16 + ub, hx, hy, "z", "W", cuff="v")
+    if back_hand:
+        c.set(back_hand[0] + lx, back_hand[1] + ub, "i")
+    draw_cross(c, tx, ty, glow)
+    if fx == "spark":
+        for (dx, dy, col) in ((3, 0, "W"), (5, 0, "s"), (4, -2, "x"), (4, 2, "x")):
+            c.set(tx + dx, ty + dy, col)
+    if fx == "light":
+        for (x, y, col) in ((5, 8, "s"), (8, 3, "W"), (26, 4, "s"), (11, 1, "s"), (27, 10, "W"), (4, 14, "W")):
+            c.set(x, y, col)
+    return c
+
+
+def healer_sheet() -> Canvas:
+    F = finish
+    idle = [F(healer(bob=b, blink=(i == 3), staff_up=14 - b)) for i, b in enumerate((0, 0, 1, 1))]
+    walk = []
+    for f in range(6):
+        p = f / 6 * 2 * math.pi
+        s = math.sin(p)
+        fd = round(1.6 * s)
+        bob = 0 if abs(s) > 0.6 else 1
+        walk.append(F(healer(bob=bob, front_dx=fd, back_dx=-fd, sway=-s * 0.8,
+                             hand=(21 + fd // 2, 19), staff=-90 + fd * 3, staff_up=14 - bob)))
+    attack = [
+        F(healer(hand=(19, 18), staff=-105, staff_up=12, lean=-1, glow=1)),
+        F(healer(hand=(21, 17), staff=-65, staff_up=12, staff_down=8, glow=1, back_dx=-1, front_dx=1)),
+        F(healer(hand=(24, 17), staff=-30, staff_up=7, staff_down=8, lean=1, glow=2, fx="spark",
+                 back_dx=-2, front_dx=2)),
+        F(healer(hand=(24, 17), staff=-35, staff_up=7, staff_down=8, lean=1, glow=1, back_dx=-2, front_dx=2)),
+        F(healer(hand=(21, 18), staff=-80, staff_up=13, back_dx=-1, front_dx=1)),
+    ]
+    hurt = [F(flash(healer(lean=-1, hand=(20, 19), staff=-100))), F(healer(lean=-1, hand=(20, 19), staff=-100))]
+    pose = dict(hand=(20, 20), staff=-110, lean=-1)
+    death = fall_frames(healer, pose, H_FOOT, 15, [-35, -70, -90, -90], 32, 32,
+                        pre=[F(flash(healer(lean=-1, hand=(20, 19), staff=-100))),
+                             F(healer(crouch=2, lean=-1, hand=(20, 21), staff=-115, staff_down=5, staff_up=16))])
+    cast = [
+        F(healer(hand=(21, 15), staff=-90, staff_up=11, back_hand=(9, 12), glow=1)),
+        F(healer(hand=(21, 11), staff=-90, staff_up=8, staff_down=12, back_hand=(8, 7), glow=2, bob=-1)),
+        F(healer(hand=(21, 11), staff=-90, staff_up=8, staff_down=12, back_hand=(8, 7), glow=2, bob=-1,
+                 fx="light")),
+        F(healer(hand=(21, 15), staff=-90, staff_up=11, back_hand=(9, 13), glow=1)),
+    ]
+    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
+
+
+# ---------------------------------------------------------------- shared bow (any tilt)
+def draw_longbow(c: Canvas, gx: float, gy: float, tilt: float, draw: float, arrow: bool,
+                 half: float = 8.0, bend: float = 3.0) -> tuple[int, int]:
+    """Recurve bow gripped at (gx, gy); tilt = aim angle in degrees (0 = right, negative = up).
+    Returns the string nock point (where the drawing hand is)."""
+    t = math.radians(tilt)
+    fx, fy = math.cos(t), math.sin(t)  # aim direction
+    ax, ay = -fy, fx  # bow axis (points down for tilt 0)
+    pts = []
+    n = 24
+    for i in range(n + 1):
+        s = -1 + 2 * i / n
+        f = bend * (1 - s * s) - 0.8 * max(0.0, abs(s) - 0.75) * 4  # recurved tips
+        pts.append((gx + ax * s * half + fx * (f - bend), gy + ay * s * half + fy * (f - bend)))
+    tip0, tip1 = pts[0], pts[-1]
+    nock = (gx - fx * (bend + draw), gy - fy * (bend + draw))
+    nock = (round(nock[0]), round(nock[1]))
+    c.line(tip0[0], tip0[1], nock[0], nock[1], "z")
+    c.line(nock[0], nock[1], tip1[0], tip1[1], "z")
+    for i, (x, y) in enumerate(pts):
+        c.set(x, y, "d" if i < n * 0.4 else "c")
+    c.set(gx, gy, "a")
+    if arrow:
+        hx, hy = gx + fx * 3, gy + fy * 3
+        c.line(nock[0], nock[1], hx, hy, "c")
+        c.set(round(hx + fx), round(hy + fy), "W")
+        c.set(round(hx), round(hy), "p")
+        c.set(round(nock[0] - fx + ax), round(nock[1] - fy + ay), "S")
+        c.set(round(nock[0] - fx - ax), round(nock[1] - fy - ay), "S")
+    return nock
+
+
+# ---------------------------------------------------------------- ARCHER
+# short brown hair, green cowl and cloak, leather jerkin, quiver with pale fletchings, longbow
+ARCHER_HEAD = [
+    "...bccb...",
+    "..bccdccb.",
+    ".bcdccbccb",
+    "abccbaiijb",
+    "abahijjjji",
+    "abahijjoji",
+    ".bbhiijjjj",
+    "..bhiiiih.",
+    "...hhii...",
+]
+ARCHER_COWL = [
+    "..vwwv.vvu...",
+    ".vwwvvwvvvuu.",
+    "uvwvvvvvvvuut",
+    "tuuvuuuvuut..",
+]
+ARCHER_TORSO = [
+    "...........",
+    ".bcddcccba.",
+    "bcddccacbba",
+    "bcdccacbbba",
+    "bcccacccbba",
+    "bccacccbbba",
+    "abacccccbaa",
+    "aaarqaaaaaa",
+    ".tuuuuuuut.",
+    ".tuuvuuuut.",
+]
+ARCHER_LEG = [
+    "tuu",
+    "tuu",
+    "tuv",
+    "acc",
+    "bcd",
+    "bccb",
+    "bcdcb",
+    "abbbbb",
+]
+
+
+def archer_cloak(c: Canvas, lx: int, ub: int, flutter: int = 0) -> None:
+    """Green cloak hanging behind the back shoulder."""
+    for y in range(13 + ub, 27):
+        k = y - 13 - ub
+        x0 = round(10 + lx - k * 0.32 - (flutter if k > 6 else 0))
+        x1 = 14 + lx
+        for x in range(x0, x1 + 1):
+            c.set(x, y, "v" if x == x0 and k < 7 else ("u" if x < x0 + 3 else "t"))
+    # ragged hem
+    for i, x in enumerate(range(round(10 + lx - 13 * 0.32 - flutter), 15 + lx)):
+        if i % 3 == 1:
+            c.set(x, 27, "t")
+
+
+def archer(bob: int = 0, back_dx: int = 0, back_lift: int = 0, front_dx: int = 0, front_lift: int = 0,
+           grip: tuple[float, float] = (23, 19), tilt: float = 0, draw: float = 0, arrow: bool = False,
+           pull: tuple[float, float] | None = None, lean: int = 0, crouch: int = 0, flutter: int = 0,
+           blink: bool = False, fx: str | None = None) -> Canvas:
+    c = Canvas(32, 32)
+    ub = bob + crouch
+    lx = lean
+    # quiver on the back: tube + fletchings above the back shoulder
+    c.line(8 + lx, 19 + ub, 10 + lx, 10 + ub, "b")
+    c.line(9 + lx, 19 + ub, 11 + lx, 10 + ub, "a")
+    for (x, y, col) in ((8, 6, "W"), (9, 5, "z"), (10, 6, "W"), (11, 5, "z"), (7, 7, "z"), (9, 7, "S"),
+                        (10, 8, "S"), (9, 8, "c"), (10, 9, "c")):
+        c.set(x + lx, y + ub, col)
+    archer_cloak(c, lx, ub, flutter)
+    c.stamp(ARCHER_LEG, 12 + back_dx, 23 - back_lift, remap=DARKER)
+    # drawing arm (behind the torso when relaxed)
+    gx, gy = grip[0] + lx, grip[1] + ub
+    if pull is None:
+        pull_pt = (13 + lx, 21 + ub)
+    else:
+        pull_pt = (pull[0] + lx, pull[1] + ub)
+    c.stamp(ARCHER_TORSO, 10 + lx, 13 + ub)
+    c.stamp(ARCHER_LEG, 16 + front_dx, 23 - front_lift)
+    c.stamp(ARCHER_COWL, 9 + lx, 11 + ub)
+    head = list(ARCHER_HEAD)
+    if blink:
+        head[5] = "bcbhiijjhj"
+    c.stamp(head, 11 + lx, 3 + ub)
+    # bow + bow arm (front)
+    nock = draw_longbow(c, gx, gy, tilt, draw, arrow)
+    sleeve(c, 18 + lx, 15 + ub, gx - 1, gy, "b", "c", cuff="a")
+    # string hand
+    hand = nock if (draw or arrow) else pull_pt
+    sleeve(c, 13 + lx, 15 + ub, hand[0], hand[1], "a", "b", hand="i")
+    if fx == "release":
+        t = math.radians(tilt)
+        for k, col in ((4, "W"), (6, "z"), (8, "W")):
+            c.set(round(gx + math.cos(t) * k), round(gy + math.sin(t) * k), col)
+    if fx == "volley":
+        for (x, y, col) in ((27, 6, "W"), (29, 9, "z"), (25, 3, "z"), (30, 4, "W")):
+            c.set(x, y, col)
+    return c
+
+
+def archer_sheet() -> Canvas:
+    F = finish
+    idle = [F(archer(bob=b, blink=(i == 3))) for i, b in enumerate((0, 0, 1, 1))]
+    walk = []
+    for f in range(6):
+        p = f / 6 * 2 * math.pi
+        s = math.sin(p)
+        fd = round(2.4 * s)
+        fl = 1 if math.cos(p) > 0.5 else 0
+        bl = 1 if math.cos(p) < -0.5 else 0
+        bob = 0 if abs(s) > 0.6 else 1
+        walk.append(F(archer(bob=bob, front_dx=fd, back_dx=-fd, front_lift=fl, back_lift=bl,
+                             grip=(23 + fd // 2, 19), tilt=fd * 3, flutter=1 if bob else 0)))
+    attack = [
+        F(archer(grip=(24, 16), arrow=True, draw=1, back_dx=-1, front_dx=1)),
+        F(archer(grip=(25, 16), arrow=True, draw=5, lean=-1, back_dx=-2, front_dx=2)),
+        F(archer(grip=(25, 16), draw=0, pull=(15, 14), lean=-1, back_dx=-2, front_dx=2, fx="release")),
+        F(archer(grip=(24, 17), draw=0, pull=(14, 16), back_dx=-1, front_dx=1)),
+        F(archer(grip=(23, 18), back_dx=-1, front_dx=1)),
+    ]
+    hurt = [F(flash(archer(lean=-1, grip=(22, 19)))), F(archer(lean=-1, grip=(22, 19)))]
+    pose = dict(grip=(21, 21), tilt=20, lean=-1)
+    death = fall_frames(archer, pose, H_FOOT, 15, [-35, -70, -90, -90], 32, 32,
+                        pre=[F(flash(archer(lean=-1, grip=(22, 19)))), F(archer(crouch=2, lean=-1, grip=(21, 18), tilt=15))])
+    cast = [
+        F(archer(grip=(24, 14), tilt=-30, arrow=True, draw=1, back_dx=-1, front_dx=1)),
+        F(archer(grip=(24, 13), tilt=-45, arrow=True, draw=4, lean=-1, back_dx=-2, front_dx=2, flutter=1)),
+        F(archer(grip=(24, 13), tilt=-45, draw=0, pull=(16, 14), lean=-1, back_dx=-2, front_dx=2, fx="volley",
+                 flutter=1)),
+        F(archer(grip=(24, 15), tilt=-30, arrow=True, draw=2, back_dx=-1, front_dx=1)),
+    ]
+    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
+
+
+# ---------------------------------------------------------------- HUNTER
+# fur-trimmed hood, khaki cloak, dark leather, throwing knives, bow slung on the back
+HUNTER_HEAD = [
+    "....aabba..",
+    "...abcccba.",
+    "..abccbbbba",
+    ".abcbbbzWzz",
+    ".abbbzWccij",
+    "abbbbzhijjj",
+    "abbbbzhijoj",
+    "abbbbzhijjj",
+    ".abbbzyhiih",
+    "..abbbzzy..",
+]
+HUNTER_MANTLE = [
+    "..zWzzz......",
+    ".zWzzyzzz....",
+    "yzzyzyzyzy...",
+    "qyyqyyqyyq...",
+]
+HUNTER_TORSO = [
+    "...........",
+    ".aabbbbbaa.",
+    "abbccbbbaak",
+    "abcbbbqbaak",
+    "abbbbqbbaak",
+    "abbbqbbbaak",
+    "aabqbbbbaak",
+    "kkkrkkkcckk",
+    ".yqqyqqqqk.",
+    ".yqyqqyqqk.",
+]
+HUNTER_LEG = [
+    "kaa",
+    "kab",
+    "kab",
+    "zWz",
+    "abb",
+    "abbb",
+    "abbbb",
+    "kaaaaa",
+]
+
+
+def draw_knife(c: Canvas, hx: float, hy: float, ang: float, blade: int = 4) -> None:
+    t = math.radians(ang)
+    dx, dy = math.cos(t), math.sin(t)
+    px_, py_ = -dy, dx
+    c.set(round(hx - dx * 2), round(hy - dy * 2), "r")
+    c.set(round(hx - dx), round(hy - dy), "b")
+    c.set(round(hx + dx + px_), round(hy + dy + py_), "q")
+    c.set(round(hx + dx - px_), round(hy + dy - py_), "q")
+    for i in range(1, blade + 1):
+        c.set(round(hx + dx * (i + 1)), round(hy + dy * (i + 1)), "W" if i == blade else ("p" if i % 2 else "z"))
+
+
+def hunter_cloak(c: Canvas, lx: int, ub: int, flutter: int = 0) -> None:
+    for y in range(14 + ub, 26):
+        k = y - 14 - ub
+        x0 = round(10 + lx - k * 0.28 - (flutter if k > 5 else 0))
+        for x in range(x0, 15 + lx):
+            c.set(x, y, "y" if x == x0 and k < 6 else ("q" if x < x0 + 3 else "a"))
+    hem_x0 = round(10 + lx - 11 * 0.28 - flutter)
+    for i, x in enumerate(range(hem_x0, 15 + lx)):
+        if i % 2 == 0:
+            c.set(x, 26, "q" if i < 3 else "a")
+
+
+def hunter(bob: int = 0, back_dx: int = 0, back_lift: int = 0, front_dx: int = 0, front_lift: int = 0,
+           hand: tuple[float, float] = (21, 22), knife: float = 20, knife_shown: bool = True,
+           back_hand: tuple[float, float] | None = None, lean: int = 0, crouch: int = 0, flutter: int = 0,
+           blink: bool = False, fx: str | None = None) -> Canvas:
+    c = Canvas(32, 32)
+    ub = bob + crouch
+    lx = lean
+    # bow slung diagonally across the back
+    for i in range(14):
+        x = 7 + lx + round(i * 0.45 + 1.2 * math.sin(i / 13 * math.pi))
+        y = 9 + ub + i
+        c.set(x, y, "c" if i < 6 else "b")
+    hunter_cloak(c, lx, ub, flutter)
+    c.stamp(HUNTER_LEG, 12 + back_dx, 23 - back_lift, remap=DARKER)
+    if back_hand:
+        sleeve(c, 13 + lx, 16 + ub, back_hand[0] + lx, back_hand[1] + ub, "k", "a")
+    c.stamp(HUNTER_TORSO, 10 + lx, 13 + ub)
+    c.set(13 + lx, 20 + ub, "p")  # spare knife on the belt
+    c.set(13 + lx, 21 + ub, "b")
+    c.stamp(HUNTER_LEG, 16 + front_dx, 23 - front_lift)
+    c.stamp(HUNTER_MANTLE, 9 + lx, 12 + ub)
+    head = list(HUNTER_HEAD)
+    if blink:
+        head[6] = "abbbbzhijhj"
+    c.stamp(head, 10 + lx, 2 + ub)
+    hx, hy = hand[0] + lx, hand[1] + ub
+    if knife_shown:
+        draw_knife(c, hx, hy, knife)
+    sleeve(c, 18 + lx, 15 + ub, hx, hy, "q", "y", cuff="a")
+    if back_hand:
+        c.set(back_hand[0] + lx, back_hand[1] + ub, "i")
+    if fx == "throw":
+        for (x, y, col) in ((26, 13, "W"), (28, 13, "z"), (29, 14, "W")):
+            c.set(x, y, col)
+    if fx in ("call", "call2"):
+        for (x, y, col) in ((24, 8, "W"), (25, 9, "W"), (25, 10, "W"), (24, 11, "W"),
+                            (27, 7, "z"), (28, 8, "z"), (28, 9, "z"), (28, 10, "z"), (27, 11, "z")):
+            c.set(x, y + (1 if fx == "call2" else 0), col)
+    if fx == "call2":
+        for (x, y, col) in ((30, 7, "y"), (30, 11, "y"), (27, 2, "s")):
+            c.set(x, y, col)
+    return c
+
+
+def hunter_sheet() -> Canvas:
+    F = finish
+    idle = [F(hunter(bob=b, blink=(i == 3))) for i, b in enumerate((0, 0, 1, 1))]
+    walk = []
+    for f in range(6):
+        p = f / 6 * 2 * math.pi
+        s = math.sin(p)
+        fd = round(2.4 * s)
+        fl = 1 if math.cos(p) > 0.5 else 0
+        bl = 1 if math.cos(p) < -0.5 else 0
+        bob = 0 if abs(s) > 0.6 else 1
+        walk.append(F(hunter(bob=bob, front_dx=fd, back_dx=-fd, front_lift=fl, back_lift=bl,
+                             hand=(21 - fd // 2, 22), knife=20 + fd * 6, flutter=1 if bob else 0)))
+    attack = [
+        F(hunter(hand=(18, 3), knife=-160, lean=-1, back_dx=-1, front_dx=1)),
+        F(hunter(hand=(22, 3), knife=-90, back_dx=-1, front_dx=1)),
+        F(hunter(hand=(25, 14), knife_shown=False, lean=1, back_dx=-2, front_dx=2, fx="throw")),
+        F(hunter(hand=(23, 19), knife_shown=False, lean=1, back_dx=-2, front_dx=2)),
+        F(hunter(hand=(21, 21), knife=20, back_dx=-1, front_dx=1)),
+    ]
+    hurt = [F(flash(hunter(lean=-1, hand=(20, 21)))), F(hunter(lean=-1, hand=(20, 21)))]
+    pose = dict(hand=(20, 22), knife=60, lean=-1)
+    death = fall_frames(hunter, pose, H_FOOT, 15, [-35, -70, -90, -90], 32, 32,
+                        pre=[F(flash(hunter(lean=-1, hand=(20, 21)))), F(hunter(crouch=2, lean=-1, hand=(20, 21), knife=30))])
+    cast = [
+        F(hunter(hand=(21, 10), knife_shown=False)),
+        F(hunter(hand=(21, 10), knife_shown=False, fx="call")),
+        F(hunter(hand=(24, 4), knife_shown=False, bob=-1, back_dx=-1, front_dx=1, fx="call2")),
+        F(hunter(hand=(23, 8), knife_shown=False, back_dx=-1, front_dx=1)),
+    ]
+    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
+
+
+# ======================================================================================
+# COMPANION WOLF 24x24 (hunter's summon: warm brown fur, red bandana, tail up)
+# ======================================================================================
+COMPANION_FUR = {"m": "b", "n": "c", "p": "d", "z": "j", "D": "a"}
+
+
+def wolf_companion(bob: int = 0, dx: int = 0, drop: int = 0, head_dy: int = 0, **kw) -> Canvas:
+    c = wolf(bob=bob, dx=dx, drop=drop, head_dy=head_dy, **kw)
+    c.recolor(COMPANION_FUR, keep="or")
+    by = 13 + bob + drop
+    # red bandana knotted around the neck, tip hanging down the chest
+    for (x, y, col) in ((14, by - 1, "S"), (15, by, "S"), (16, by, "S"), (17, by + 1, "S"), (15, by + 1, "R"),
+                        (16, by + 1, "S"), (16, by + 2, "R"), (13, by - 1, "R")):
+        c.set(x + dx, y, col)
+    # light muzzle/brow so it reads friendlier than the grey wolf
+    c.set(14 + dx, by - 4 + head_dy, "g")
+    return c
+
+
+def sparkle_dissolve(body: Canvas, stage: int, seed: int = 3) -> Canvas:
+    """Despawn: pixels drop out in a fixed random order, survivors on the edge turn to gold sparks."""
+    rnd = random.Random(seed)
+    pts = [(x, y) for y in range(body.h) for x in range(body.w) if body.px[y][x] not in (None, "o")]
+    rnd.shuffle(pts)
+    keep_frac = {1: 0.6, 2: 0.3, 3: 0.1, 4: 0.0}[stage]
+    keep = set(pts[:int(len(pts) * keep_frac)])
+    out = Canvas(body.w, body.h)
+    for (x, y) in keep:
+        out.px[y][x] = body.px[y][x]
+    out.outline("o")
+    # sparks drifting up from the removed pixels
+    rnd2 = random.Random(seed + stage)
+    lost = pts[int(len(pts) * keep_frac):]
+    rnd2.shuffle(lost)
+    for (x, y) in lost[:{1: 6, 2: 8, 3: 7, 4: 4}[stage]]:
+        out.set(x, y - stage * 2, rnd2.choice("sWr"))
+    return out
+
+
+def wolf_companion_sheet() -> Canvas:
+    F = finish
+    W = wolf_companion
+    idle = [F(W(bob=b, tail=t)) for b, t in ((0, 1), (0, 2), (1, 2), (1, 1))]
+    pat = [(2, -1, -1, 2), (1, 0, 0, 1), (-1, 2, 2, -1), (-2, 1, 1, -2), (-1, 0, 0, -1), (1, -2, -2, 1)]
+    lift = [(0, 1, 1, 0), (1, 0, 0, 1), (0, 1, 1, 0), (0, 0, 0, 0), (1, 0, 0, 1), (0, 0, 0, 0)]
+    walk = [F(W(bob=(1 if i in (1, 4) else 0), legs=pat[i], lifts=lift[i], tail=1 + i % 2)) for i in range(6)]
+    attack = [
+        F(W(dx=-1, drop=1, head_dy=1, legs=(-1, -1, 1, 1), leg_len=6, tail=1)),
+        F(W(dx=0, bob=-1, legs=(-2, -2, 2, 2), lifts=(1, 1, 0, 0), open_mouth=True, tail=2)),
+        F(W(dx=1, bob=0, legs=(-2, -1, 2, 1), open_mouth=True, head_dy=1, tail=2)),
+        F(W(dx=1, legs=(-1, -1, 1, 1), head_dy=1, tail=1)),
+        F(W(dx=0, tail=1)),
+    ]
+    hurt = [F(flash(W(dx=-1, head_dy=-1))), F(W(dx=-1, head_dy=-1))]
+    body = W(tail=1)
+    death = [F(flash(W(tail=1)))] + [sparkle_dissolve(body, k) for k in (1, 2, 3, 4)] + [Canvas(24, 24)]
+    return build_sheet([idle, walk, attack, hurt, death], 24, 24)
+
+
+# ======================================================================================
+# Hero projectiles 8x8 (point RIGHT) and skill VFX 64x64
+# ======================================================================================
+def arcane_bolt_sprite() -> Canvas:
+    c = Canvas(8, 8)
+    c.set(0, 4, "L")
+    c.set(1, 4, "M")
+    c.set(1, 3, "L")
+    c.set(2, 5, "M")
+    c.shaded_ellipse(4.6, 4, 2.6, 2.6, "MNC")
+    c.set(4, 3, "W")
+    c.set(5, 3, "C")
+    c.set(4, 4, "C")
+    c.outline("K")
+    c.set(7, 1, "C")  # spark ahead of the orb
+    c.set(1, 6, "N")
+    return c
+
+
+def holy_bolt_sprite() -> Canvas:
+    c = Canvas(8, 8)
+    c.set(0, 4, "r")
+    c.set(1, 4, "s")
+    c.set(1, 3, "r")
+    c.shaded_ellipse(4.6, 4, 2.6, 2.6, "rsW")
+    c.set(4, 4, "x")
+    c.set(5, 4, "x")
+    c.set(4, 3, "W")
+    c.set(5, 5, "w")
+    c.outline("q")
+    c.set(7, 1, "W")
+    return c
+
+
+def knife_sprite() -> Canvas:
+    c = Canvas(8, 8)
+    c.set(0, 4, "r")
+    c.set(1, 4, "b")
+    c.set(2, 3, "q")
+    c.set(2, 4, "r")
+    c.set(2, 5, "q")
+    c.line(3, 4, 5, 4, "p")
+    c.line(3, 3, 5, 3, "z")
+    c.set(6, 4, "W")
+    c.set(6, 3, "p")
+    c.outline("o")
+    return c
+
+
+def ring_vfx(ramp: str, inner: str, sparks: str, seed: int) -> Canvas:
+    """64x64 burst ring like nova.png. ramp = outer..inner colours of the main band."""
+    c = Canvas(64, 64)
+    n = len(ramp)
+    for y in range(64):
+        for x in range(64):
+            r = math.hypot(x + 0.5 - 32, y + 0.5 - 32)
+            if 26.5 <= r <= 31.5:
+                d = (31.5 - r) / 5.0
+                c.set(x, y, ramp[min(n - 1, int(d * n))])
+            elif 21.5 <= r <= 22.5 and (int(math.degrees(math.atan2(y - 32, x - 32)) + 360) // 20) % 2 == 0:
+                c.set(x, y, inner)
+    rnd = random.Random(seed)
+    for k in range(10):
+        a = math.radians(k * 36 + rnd.uniform(-8, 8))
+        r0, r1 = rnd.uniform(9, 13), rnd.uniform(17, 21)
+        for i in range(int(r1 - r0) + 1):
+            rr = r0 + i
+            col = sparks[0] if i > (r1 - r0) * 0.6 else sparks[1]
+            c.set(32 + math.cos(a) * rr, 32 + math.sin(a) * rr, col)
+    for k in range(8):
+        a = math.radians(k * 45 + 22)
+        c.set(32 + math.cos(a) * 25, 32 + math.sin(a) * 25, "W")
+    return c
+
+
+def arcane_blast_vfx() -> Canvas:
+    return ring_vfx("LMNNC", "N", "WN", seed=13)
+
+
+def heal_wave_vfx() -> Canvas:
+    """Green-gold ring with floating healing crosses instead of arcane shards."""
+    c = Canvas(64, 64)
+    for y in range(64):
+        for x in range(64):
+            r = math.hypot(x + 0.5 - 32, y + 0.5 - 32)
+            if 26.5 <= r <= 31.5:
+                d = (31.5 - r) / 5.0
+                c.set(x, y, "vwxsW"[min(4, int(d * 5))])
+            elif 22.5 <= r <= 23.5 and (int(math.degrees(math.atan2(y - 32, x - 32)) + 360) // 15) % 3 == 0:
+                c.set(x, y, "s")
+    for k in range(8):
+        a = math.radians(k * 45 + 22.5)
+        rr = 16 if k % 2 else 19
+        cx_, cy_ = round(32 + math.cos(a) * rr), round(32 + math.sin(a) * rr)
+        for (dx, dy, col) in ((0, 0, "W"), (1, 0, "x"), (-1, 0, "x"), (0, 1, "w"), (0, -1, "x"),
+                              (2, 0, "w"), (-2, 0, "x"), (0, 2, "w"), (0, -2, "x")):
+            c.set(cx_ + dx, cy_ + dy, col)
+    for k in range(8):
+        a = math.radians(k * 45)
+        c.set(32 + math.cos(a) * 10, 32 + math.sin(a) * 10, "s")
+    return c
+
+
+# ======================================================================================
 # Projectiles, items, VFX
 # ======================================================================================
 def arrow_sprite() -> Canvas:
@@ -1510,6 +2318,57 @@ def screen_preview(path: Path, ground: Canvas, sheets: dict[str, Canvas]) -> Non
     write_png(out, path)
 
 
+def sheet_frame(sheet: Canvas, fw: int, fh: int, row: int, col: int) -> Canvas:
+    f = Canvas(fw, fh)
+    for y in range(fh):
+        for x in range(fw):
+            f.px[y][x] = sheet.px[row * fh + y][col * fw + x]
+    return f
+
+
+def heroes_previews(out_dir: Path, grass: Canvas, sheets: dict[str, Canvas], singles: dict[str, Canvas]) -> None:
+    """heroes_closeup.png: idle/attack-hit/cast frames of the 5 heroes at 6x;
+    heroes_ingame.png: 1x scene (5 heroes, companion wolf, enemies, projectiles) + the same at 3x."""
+    order = ("warrior", "mage", "healer", "archer", "hunter")
+    cols = [(0, 0), (1, 1), (2, 2), (5, 1), (4, 5)]
+    close = Canvas(len(cols) * 34, len(order) * 33)
+    for ri, k in enumerate(order):
+        for ci, (row, col) in enumerate(cols):
+            close.blit(sheet_frame(sheets[k], 32, 32, row, col), ci * 34, ri * 33)
+    preview_pair(close, grass, 6, out_dir / "heroes_closeup.png")
+    W, H = 200, 120
+    scene = Canvas(W, H)
+    for y in range(H):
+        for x in range(W):
+            scene.px[y][x] = grass.px[y % 64][x % 64]
+    for i, k in enumerate(order):
+        scene.blit(sheet_frame(sheets[k], 32, 32, 0, 0), 4 + i * 38, 6)
+        scene.blit(sheet_frame(sheets[k], 32, 32, 1, 2), 4 + i * 38, 42)
+    scene.blit(sheet_frame(sheets["wolf_companion"], 24, 24, 1, 1), 150, 88)
+    scene.blit(sheet_frame(sheets["wolf_companion"], 24, 24, 0, 0), 112, 86)
+    scene.blit(sheet_frame(sheets["wolf"], 24, 24, 1, 1).mirrored(), 176, 92)
+    scene.blit(sheet_frame(sheets["goblin"], 24, 24, 0, 0).mirrored(), 66, 88)
+    scene.blit(sheet_frame(sheets["skeleton"], 24, 24, 0, 0).mirrored(), 88, 82)
+    scene.blit(sheet_frame(sheets["slime"], 24, 24, 0, 0), 40, 94)
+    scene.blit(sheet_frame(sheets["wolf"], 24, 24, 0, 0), 4, 90)
+    for i, k in enumerate(("arcane_bolt", "holy_bolt", "knife", "arrow")):
+        scene.blit(singles[k], 138 + i * 10, 78)
+    one = compose(scene, None, None)
+    three = upscale(one, 3)
+    gap = [[(0, 0, 0, 255)] * (W * 3) for _ in range(4)]
+    write_png([r + [(0, 0, 0, 255)] * (W * 2) for r in one] + gap + three, out_dir / "heroes_ingame.png")
+    vf = Canvas(64 * 3 + 8, 64)
+    vf.blit(singles["nova"], 0, 0)
+    vf.blit(singles["arcane_blast"], 68, 0)
+    vf.blit(singles["heal_wave"], 136, 0)
+    preview_pair(vf, grass, 3, out_dir / "hero_vfx.png")
+    pr = Canvas(4 * 10, 8)
+    for i, k in enumerate(("arcane_bolt", "holy_bolt", "knife", "arrow")):
+        pr.blit(singles[k], i * 10, 0)
+    preview_pair(pr, grass, 10, out_dir / "hero_projectiles.png")
+
+
+
 # ======================================================================================
 def main() -> None:
     preview_dir = None
@@ -1524,6 +2383,11 @@ def main() -> None:
         "skeleton": (skeleton_sheet(), "sprites/enemies/skeleton.png", 24, 24),
         "slime": (slime_sheet(), "sprites/enemies/slime.png", 24, 24),
         "boss": (guardian_sheet(), "sprites/enemies/forest_guardian.png", 64, 64),
+        "mage": (mage_sheet(), "sprites/characters/mage.png", 32, 32),
+        "healer": (healer_sheet(), "sprites/characters/healer.png", 32, 32),
+        "archer": (archer_sheet(), "sprites/characters/archer.png", 32, 32),
+        "hunter": (hunter_sheet(), "sprites/characters/hunter.png", 32, 32),
+        "wolf_companion": (wolf_companion_sheet(), "sprites/companions/wolf_companion.png", 24, 24),
     }
     for _, (sh, rel, _, _) in sheets.items():
         save(sh, rel)
@@ -1535,6 +2399,11 @@ def main() -> None:
         "coin": (coin_icon(), "sprites/items/gold_coin.png"),
         "slash": (slash_vfx(), "sprites/vfx/slash.png"),
         "nova": (nova_vfx(), "sprites/vfx/nova.png"),
+        "arcane_bolt": (arcane_bolt_sprite(), "sprites/projectiles/arcane_bolt.png"),
+        "holy_bolt": (holy_bolt_sprite(), "sprites/projectiles/holy_bolt.png"),
+        "knife": (knife_sprite(), "sprites/projectiles/knife.png"),
+        "arcane_blast": (arcane_blast_vfx(), "sprites/vfx/arcane_blast.png"),
+        "heal_wave": (heal_wave_vfx(), "sprites/vfx/heal_wave.png"),
         "grass": (grass_tile(), "tilesets/grass.png"),
         "cave": (cave_tile(), "tilesets/cave.png"),
     }
@@ -1594,6 +2463,7 @@ def main() -> None:
         sprites = {k: v[0] for k, v in sheets.items()}
         sprites.update({k: v[0] for k, v in singles.items()})
         scene_preview(preview_dir / "ingame.png", grass, sprites, decor)
+        heroes_previews(preview_dir, grass, {k: v[0] for k, v in sheets.items()}, {k: v[0] for k, v in singles.items()})
         print(f"previews -> {preview_dir}")
 
 

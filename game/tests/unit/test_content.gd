@@ -6,15 +6,25 @@ func test_bundled_content_is_valid() -> void:
 
 
 func test_drafts_are_hidden_from_client() -> void:
-	assert_eq(Content.get_character("character_mage"), null, "draft character must not be loaded")
-	assert_true(Content.get_character("character_warrior") != null)
+	var repository := DefinitionRepository.new("characters", func(d: Dictionary) -> ContentDefinition: return CharacterDefinition.new(d))
+	repository.load_entries([{"id": "character_a", "status": "published"}, {"id": "character_b", "status": "draft"}])
+	assert_true(repository.has_id("character_a"))
+	assert_false(repository.has_id("character_b"), "draft must not be loaded")
 
 
 func test_drafts_are_visible_when_requested() -> void:
-	var source := LocalJsonContentSource.new()
 	var repository := DefinitionRepository.new("characters", func(d: Dictionary) -> ContentDefinition: return CharacterDefinition.new(d))
-	repository.load_entries(source.load_collection("characters"), true)
-	assert_true(repository.has_id("character_mage"))
+	repository.load_entries([{"id": "character_b", "status": "draft"}], true)
+	assert_true(repository.has_id("character_b"))
+
+
+func test_all_five_heroes_playable() -> void:
+	for id in ["character_warrior", "character_mage", "character_healer", "character_archer", "character_hunter"]:
+		var character := Content.get_character(id)
+		assert_true(character != null, "%s is published" % id)
+		if character != null:
+			assert_true(Profile.is_character_unlocked(id), "%s is available from the start" % id)
+			assert_eq(character.skills.size(), 1)
 
 
 func test_duplicate_ids_are_reported() -> void:

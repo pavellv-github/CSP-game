@@ -21,6 +21,8 @@ class SkillSlot:
 var body: CombatEntity
 var stats: StatsComponent
 var damage_multiplier: float = 1.0
+## Direction used when there is no target (set by the player every frame).
+var facing: Vector2 = Vector2.RIGHT
 var slots: Array[SkillSlot] = []
 
 
@@ -64,18 +66,54 @@ func use(index: int = 0) -> bool:
 		return false
 	var definition := slot.definition
 	var radius := slot.get_param("radius", definition.radius)
+	var attack := stats.get_stat(Stats.DAMAGE) * slot.get_param("damage_multiplier", definition.damage_multiplier) * damage_multiplier
+	var origin := body.global_position
 	match definition.effect:
 		SkillDefinition.EFFECT_AOE_DAMAGE:
-			var attack := stats.get_stat(Stats.DAMAGE) * slot.get_param("damage_multiplier", definition.damage_multiplier) * damage_multiplier
-			CombatSystem.deal_area_damage(body.get_tree(), TARGET_GROUP, body.global_position, radius, attack,
-				stats.get_stat(Stats.CRIT_CHANCE), stats.get_stat(Stats.CRIT_MULTIPLIER), Vector2.ZERO, 360.0, definition.id)
+			_area_damage(origin, radius, attack, definition.id)
+		SkillDefinition.EFFECT_TARGET_AOE:
+			var target := CombatSystem.find_nearest(body.get_tree(), TARGET_GROUP, origin, slot.get_param("cast_range", definition.cast_range))
+			if target == null:
+				return false # nothing to hit: keep the skill ready
+			origin = target.global_position
+			_area_damage(origin, radius, attack, definition.id)
+		SkillDefinition.EFFECT_VOLLEY:
+			var volley_target := CombatSystem.find_nearest(body.get_tree(), TARGET_GROUP, origin, stats.get_stat(Stats.ATTACK_RANGE) * 1.5)
+			var aim := origin.direction_to(volley_target.global_position) if volley_target != null else facing
+			var count := maxi(1, roundi(slot.get_param("count", definition.count)))
+			var spread := deg_to_rad(definition.spread_degrees)
+			for i in count:
+				var angle := 0.0 if count == 1 else lerpf(-spread * 0.5, spread * 0.5, float(i) / (count - 1))
+				Projectile.fire_from(body, aim.rotated(angle), attack, definition.projectile, definition.id,
+					stats.get_stat(Stats.CRIT_CHANCE), stats.get_stat(Stats.CRIT_MULTIPLIER), stats.get_stat(Stats.ATTACK_RANGE) * 1.3)
+			radius = 0.0
+		SkillDefinition.EFFECT_HEAL_WAVE:
+			body.health.heal(roundi(body.health.max_health * slot.get_param("heal_ratio", definition.heal_ratio)))
+			_area_damage(origin, radius, attack, definition.id)
+		SkillDefinition.EFFECT_SUMMON:
+			var companion := Companion.create(body, definition.companion, stats.get_stat(Stats.DAMAGE) * damage_multiplier,
+				slot.get_param("duration", definition.duration))
+			body.spawn_requested.emit(companion)
+			radius = 0.0
 		_:
 			push_warning("[Skills] unknown effect '%s'" % definition.effect)
 			return false
 	slot.cooldown_left = slot.get_param("cooldown", definition.cooldown)
-	skill_activated.emit(definition, body.global_position, radius)
+	skill_activated.emit(definition, origin, radius)
 	EventBus.skill_used.emit(definition.id)
 	return true
+
+
+func skill_ids() -> Array[String]:
+	var result: Array[String] = []
+	for slot in slots:
+		result.append(slot.definition.id)
+	return result
+
+
+func _area_damage(origin: Vector2, radius: float, attack: float, source_id: String) -> void:
+	CombatSystem.deal_area_damage(body.get_tree(), TARGET_GROUP, origin, radius, attack,
+		stats.get_stat(Stats.CRIT_CHANCE), stats.get_stat(Stats.CRIT_MULTIPLIER), Vector2.ZERO, 360.0, source_id)
 
 
 func physics_step(delta: float) -> void:

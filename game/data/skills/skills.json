@@ -11,6 +11,67 @@
 			"damage_multiplier": 2.5,
 			"radius": 56,
 			"vfx": "res://assets/sprites/vfx/nova.png"
+		},
+		{
+			"id": "skill_meteor",
+			"status": "published",
+			"name": "Meteor",
+			"description": "Calls down a meteor on the nearest enemy, hitting everything around it.",
+			"effect": "target_aoe",
+			"cooldown": 7.0,
+			"damage_multiplier": 3.0,
+			"radius": 44,
+			"cast_range": 170,
+			"vfx": "res://assets/sprites/vfx/arcane_blast.png"
+		},
+		{
+			"id": "skill_heal_wave",
+			"status": "published",
+			"name": "Wave of Light",
+			"description": "Restores 30% health and burns enemies around.",
+			"effect": "heal_wave",
+			"cooldown": 9.0,
+			"heal_ratio": 0.3,
+			"damage_multiplier": 1.5,
+			"radius": 60,
+			"vfx": "res://assets/sprites/vfx/heal_wave.png"
+		},
+		{
+			"id": "skill_volley",
+			"status": "published",
+			"name": "Volley",
+			"description": "Fires a fan of seven arrows.",
+			"effect": "volley",
+			"cooldown": 6.0,
+			"damage_multiplier": 1.0,
+			"count": 7,
+			"spread_degrees": 60,
+			"projectile": { "sprite": "res://assets/sprites/projectiles/arrow.png", "speed": 240, "pierce": 1 }
+		},
+		{
+			"id": "skill_call_wolf",
+			"status": "published",
+			"name": "Call of the Wolf",
+			"description": "Summons a wolf companion for 10 seconds.",
+			"effect": "summon",
+			"cooldown": 12.0,
+			"duration": 10.0,
+			"companion": {
+				"sprite": "res://assets/sprites/companions/wolf_companion.png",
+				"frame_size": [24, 24],
+				"animations": {
+					"idle": { "row": 0, "frames": 4, "fps": 6 },
+					"walk": { "row": 1, "frames": 6, "fps": 10 },
+					"attack": { "row": 2, "frames": 5, "fps": 12, "hit_frame": 2 },
+					"hurt": { "row": 3, "frames": 2, "fps": 12 },
+					"death": { "row": 4, "frames": 6, "fps": 10 }
+				},
+				"speed": 115,
+				"damage_multiplier": 0.9,
+				"attack_range": 14,
+				"attack_cooldown": 0.6,
+				"leash_radius": 170
+			}
 		}
 	]
 }

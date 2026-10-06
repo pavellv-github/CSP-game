@@ -70,10 +70,14 @@ func _ready() -> void:
 	player.camera.limit_right = int(arena.size.x)
 	player.camera.limit_bottom = int(arena.size.y)
 	player.camera.reset_smoothing()
-	player.attack_performed.connect(func(direction: Vector2, attack_range: float) -> void:
-		vfx.slash(player.global_position, direction, attack_range))
+	player.attack_performed.connect(func(direction: Vector2, attack_range: float, is_melee: bool) -> void:
+		if is_melee:
+			vfx.slash(player.global_position, direction, attack_range))
+	player.spawn_requested.connect(func(node: Node2D) -> void:
+		(projectiles if node is Projectile else entities).add_child(node))
 	player.skill_performed.connect(func(skill: SkillDefinition, origin: Vector2, radius: float) -> void:
-		vfx.ring(origin, radius, skill.vfx)
+		if radius > 0.0 and not skill.vfx.is_empty():
+			vfx.ring(origin, radius, skill.vfx)
 		AudioManager.play_sfx("skill"))
 	player.experience.leveled_up.connect(_on_player_leveled_up)
 
@@ -141,7 +145,7 @@ func _offer_upgrade() -> void:
 	if _finished or pending_level_ups <= 0:
 		return
 	var count := Services.config.get_int("run.upgrade_choices", 3)
-	var choices := UpgradeService.roll_choices(run_upgrades, count, _rng)
+	var choices := UpgradeService.roll_choices(run_upgrades, count, _rng, player.skills.skill_ids())
 	if choices.is_empty():
 		pending_level_ups = 0
 		return

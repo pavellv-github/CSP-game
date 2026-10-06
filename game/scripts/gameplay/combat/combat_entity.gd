@@ -3,6 +3,9 @@ extends CharacterBody2D
 ## Anything that can take part in combat (player, enemies). CombatSystem talks to this
 ## interface and does not care about the concrete entity type.
 
+## Asks the level to add a node it created (projectile, companion) to the world.
+signal spawn_requested(node: Node2D)
+
 enum Team { PLAYER, ENEMIES }
 
 var team: Team = Team.ENEMIES

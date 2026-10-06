@@ -9,9 +9,13 @@ const META_SOURCE := "meta_upgrades"
 
 ## Picks up to `count` distinct run upgrades that are not maxed and have prerequisites met.
 ## `owned` maps upgrade_id -> level taken in this run.
-static func roll_choices(owned: Dictionary, count: int, rng: RandomNumberGenerator) -> Array[UpgradeDefinition]:
+## Skill upgrades are offered only for skills in `skill_ids` (the hero's skills).
+static func roll_choices(owned: Dictionary, count: int, rng: RandomNumberGenerator,
+		skill_ids: Array[String] = []) -> Array[UpgradeDefinition]:
 	var pool: Array[UpgradeDefinition] = []
 	for upgrade in Content.get_upgrades_by_scope(UpgradeDefinition.SCOPE_RUN):
+		if not upgrade.skill_id.is_empty() and upgrade.type == UpgradeDefinition.TYPE_SKILL_MODIFIER and upgrade.skill_id not in skill_ids:
+			continue
 		if int(owned.get(upgrade.id, 0)) >= upgrade.max_level:
 			continue
 		if not _prerequisites_met(upgrade, owned):

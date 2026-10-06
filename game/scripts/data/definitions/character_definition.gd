@@ -17,6 +17,9 @@ var base_defense: int = 0
 var attack_range: float = 32.0
 var attack_speed: float = 1.0
 var attack_arc_degrees: float = 120.0
+## Basic attack: "melee_arc" or "projectile" (with `attack_projectile` params).
+var attack_type: String = "melee_arc"
+var attack_projectile: Dictionary = {}
 var crit_chance: float = 0.0
 var crit_multiplier: float = 1.5
 var pickup_radius: float = 40.0
@@ -40,6 +43,9 @@ func _parse(d: Dictionary) -> void:
 	attack_range = float(d.get("attack_range", attack_range))
 	attack_speed = float(d.get("attack_speed", attack_speed))
 	attack_arc_degrees = float(d.get("attack_arc_degrees", attack_arc_degrees))
+	var attack: Dictionary = d.get("attack", {})
+	attack_type = str(attack.get("type", attack_type))
+	attack_projectile = attack.get("projectile", {})
 	crit_chance = float(d.get("crit_chance", crit_chance))
 	crit_multiplier = float(d.get("crit_multiplier", crit_multiplier))
 	pickup_radius = float(d.get("pickup_radius", pickup_radius))
@@ -70,6 +76,10 @@ func validate() -> Array[String]:
 	if attack_speed <= 0.0:
 		errors.append("%s: attack_speed must be > 0" % id)
 	errors.append_array(sheet.validate(id))
+	if attack_type not in ["melee_arc", "projectile"]:
+		errors.append("%s: unknown attack type '%s'" % [id, attack_type])
+	if attack_type == "projectile" and not ResourceLoader.exists(str(attack_projectile.get("sprite", ""))):
+		errors.append("%s: missing projectile sprite '%s'" % [id, attack_projectile.get("sprite", "")])
 	for path in [portrait, class_icon]:
 		if not path.is_empty() and not ResourceLoader.exists(path):
 			errors.append("%s: missing asset '%s'" % [id, path])

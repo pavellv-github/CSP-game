@@ -66,3 +66,6 @@ HUD_KILLS,Kills,Убито
 HUD_BOSS,Boss,Босс
 HUD_BOSS_TIMER,BOSS,БОСС
 HUD_BOSS_AWAKENS,%s awakens!,%s пробуждается!
+HERO_ATTACK_MELEE,Melee,Ближний бой
+HERO_ATTACK_RANGED,Ranged,Дальний бой
+HERO_SKILL,Skill: %s,Навык: %s

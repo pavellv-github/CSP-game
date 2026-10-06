@@ -101,12 +101,58 @@ func _run_smoke_test() -> void:
 	_expect(GameStateManager.change_state(State.MENU), "GAME_OVER -> MENU")
 	await _wait_for_scene("MainMenu")
 
+	await _smoke_every_hero()
+
 	var events: Array[String] = []
 	for entry in analytics.history:
 		events.append(str(entry["name"]))
 	for expected in ["game_started", "level_up", "upgrade_selected", "boss_killed", "game_completed", "game_failed"]:
 		_expect(expected in events, "analytics event '%s' sent" % expected)
 	print("[smoke] done, %d analytics events" % events.size())
+
+
+## Every hero: start a run, attack and use the skill next to an enemy; checks the attack and
+## skill actually produce their effect (projectile, companion, healing, damage).
+func _smoke_every_hero() -> void:
+	for definition in Content.characters.get_all():
+		var character := definition as CharacterDefinition
+		Profile.select_character(character.id)
+		_expect(GameStateManager.change_state(State.LEVEL_SELECTION), "%s: -> LEVEL_SELECTION" % character.id)
+		await _wait_for_scene("LevelSelection")
+		GameManager.start_run("level_forest_01")
+		await _wait_for_scene("Game")
+		await _wait_until(func() -> bool: return GameStateManager.is_state(State.GAMEPLAY), "%s run started" % character.id)
+		var game := get_tree().current_scene
+		var player: Player = game.player
+		_expect(player.definition.id == character.id, "%s is the played hero" % character.id)
+		player.health.setup(100000)
+		var enemy: Enemy = game.runner.spawn_enemy("enemy_slime", player.global_position + Vector2(30, 0))
+		enemy.health.setup(100000)
+		var enemy_health := enemy.health.current
+		player.combat.cooldown_left = 0.0
+		player.combat.manual_attack(Vector2.RIGHT)
+		await _frames(int(player.combat.release_delay * 60.0) + 2) # projectile leaves on the hit frame
+		if character.attack_type == "projectile":
+			_expect(game.get_node("Projectiles").get_child_count() > 0, "%s fires a projectile" % character.id)
+		player.health.apply_damage(30)
+		player.health.invulnerable_time = 0.0
+		var health_before := player.health.current
+		_expect(player.skills.use(0), "%s uses the skill" % character.id)
+		await _frames(45)
+		var skill := Content.get_skill(character.skills[0])
+		match skill.effect:
+			SkillDefinition.EFFECT_SUMMON:
+				var companions := game.get_node("Entities").get_children().filter(func(n: Node) -> bool: return n is Companion)
+				_expect(not companions.is_empty(), "%s summons a companion" % character.id)
+			SkillDefinition.EFFECT_HEAL_WAVE:
+				_expect(player.health.current > health_before, "%s heals" % character.id)
+		_expect(enemy.health.current < enemy_health, "%s damages the enemy" % character.id)
+		GameStateManager.change_state(State.PAUSED)
+		_expect(GameStateManager.change_state(State.MENU), "%s: leave run" % character.id)
+		await _wait_for_scene("MainMenu")
+		GameStateManager.change_state(State.CHARACTER_SELECTION)
+		await _wait_for_scene("CharacterSelection")
+	Profile.select_character("character_warrior")
 
 
 func _wait_for_scene(scene_name: String) -> void:

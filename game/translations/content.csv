@@ -2,7 +2,7 @@ keys,en,ru
 CHARACTER_WARRIOR_NAME,Warrior,Воин
 CHARACTER_WARRIOR_DESC,Sturdy melee fighter. Cleaves enemies in front of him.,Стойкий боец ближнего боя. Рассекает врагов перед собой.
 CHARACTER_MAGE_NAME,Mage,Маг
-CHARACTER_MAGE_DESC,Fragile caster.,Хрупкий заклинатель.
+CHARACTER_MAGE_DESC,Fragile caster. Arcane bolts explode on impact; Meteor strikes the nearest enemy.,Хрупкий заклинатель. Магические снаряды взрываются при попадании; Метеор обрушивается на ближайшего врага.
 ENEMY_GOBLIN_NAME,Goblin,Гоблин
 ENEMY_WOLF_NAME,Wolf,Волк
 ENEMY_SKELETON_NAME,Skeleton Archer,Скелет-лучник
@@ -41,3 +41,17 @@ UPGRADE_META_HEALTH_DESC,+10 base HP per level,+10 к базовому здор�
 UPGRADE_META_DEFENSE_NAME,Training: Guard,Тренировка: защита
 UPGRADE_META_DEFENSE_DESC,+1 base defense per level,+1 к базовой защите за уровень
 BUILDING_CAMP_NAME,Camp,Лагерь
+CHARACTER_HEALER_NAME,Healer,Хилл
+CHARACTER_HEALER_DESC,Hardest to kill. Holy bolts at medium range; Wave of Light heals and burns enemies around.,Самый живучий герой. Святые снаряды бьют на средней дистанции; Волна света лечит и обжигает врагов вокруг.
+CHARACTER_ARCHER_NAME,Archer,Лучник
+CHARACTER_ARCHER_DESC,Long-range marksman. Fast arrows pierce an enemy; Volley fires a fan of arrows.,Стрелок дальнего боя. Быстрые стрелы пробивают врага насквозь; Залп выпускает веер стрел.
+CHARACTER_HUNTER_NAME,Hunter,Охотник
+CHARACTER_HUNTER_DESC,Quick knife thrower. Call of the Wolf summons a wolf that fights at the hunter's side.,"Ловко метает ножи. Зов волка призывает спутника, который сражается рядом."
+SKILL_METEOR_NAME,Meteor,Метеор
+SKILL_METEOR_DESC,"Calls down a meteor on the nearest enemy, hitting everything around it.",Обрушивает метеор на ближайшего врага и всех вокруг него.
+SKILL_HEAL_WAVE_NAME,Wave of Light,Волна света
+SKILL_HEAL_WAVE_DESC,Restores 30% health and burns enemies around.,Восстанавливает 30% здоровья и обжигает врагов вокруг.
+SKILL_VOLLEY_NAME,Volley,Залп
+SKILL_VOLLEY_DESC,Fires a fan of seven arrows.,Выпускает веер из семи стрел.
+SKILL_CALL_WOLF_NAME,Call of the Wolf,Зов волка
+SKILL_CALL_WOLF_DESC,Summons a wolf companion for 10 seconds.,Призывает волка-спутника на 10 секунд.

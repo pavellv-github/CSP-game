@@ -34,7 +34,6 @@ func _character_card(character: CharacterDefinition, selected: bool) -> Control:
 		row.add_child(UiKit.sprite_icon(character.sheet, 40))
 	var info := UiKit.vbox(4)
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.alignment = BoxContainer.ALIGNMENT_CENTER
 	var header := UiKit.hbox(4)
 	if not character.class_icon.is_empty():
 		header.add_child(UiKit.illustration(character.class_icon))
@@ -45,6 +44,10 @@ func _character_card(character: CharacterDefinition, selected: bool) -> Control:
 	if selected:
 		info.add_child(UiKit.label(Loc.t("HERO_SELECTED"), 8, UiKit.ACCENT))
 	info.add_child(UiKit.label(Loc.desc_of(character), 8, UiKit.TEXT_DIM))
+	var attack_kind := Loc.t("HERO_ATTACK_MELEE") if character.attack_type == "melee_arc" else Loc.t("HERO_ATTACK_RANGED")
+	var skill := Content.get_skill(character.skills[0]) if not character.skills.is_empty() else null
+	var kit := attack_kind if skill == null else "%s · %s" % [attack_kind, Loc.t("HERO_SKILL") % Loc.name_of(skill)]
+	info.add_child(UiKit.label(kit, 8, UiKit.ACCENT))
 	var stats := StatsComponent.new()
 	stats.setup(character.base_stats())
 	UpgradeService.apply_meta_upgrades(stats, Profile.get_meta_upgrade_levels())
@@ -54,12 +57,13 @@ func _character_card(character: CharacterDefinition, selected: bool) -> Control:
 	row.add_child(info)
 	if Profile.is_character_unlocked(character.id):
 		if not selected:
-			row.add_child(UiKit.button(Loc.t("HERO_PICK"), func() -> void:
+			var pick := UiKit.button(Loc.t("HERO_PICK"), func() -> void:
 				Profile.select_character(character.id)
 				Profile.flush()
-				rebuild()))
+				rebuild())
+			info.add_child(pick)
 	else:
-		row.add_child(UiKit.label(Loc.t("COMMON_LOCKED"), 8, UiKit.TEXT_DIM))
+		info.add_child(UiKit.label(Loc.t("COMMON_LOCKED"), 8, UiKit.TEXT_DIM))
 	return UiKit.panel(row, 6)
 
 

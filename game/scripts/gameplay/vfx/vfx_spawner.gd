@@ -13,6 +13,7 @@ var _damage_numbers := 0
 func _ready() -> void:
 	_slash = load(SLASH_TEXTURE) if ResourceLoader.exists(SLASH_TEXTURE) else null
 	EventBus.damage_dealt.connect(_on_damage_dealt)
+	EventBus.area_effect_shown.connect(_on_area_effect_shown)
 
 
 func slash(origin: Vector2, direction: Vector2, attack_range: float) -> void:
@@ -46,6 +47,10 @@ func ring(origin: Vector2, radius: float, texture_path: String) -> void:
 	tween.tween_property(sprite, "scale", target_scale, 0.18)
 	tween.tween_property(sprite, "modulate:a", 0.0, 0.15)
 	tween.tween_callback(sprite.queue_free)
+
+
+func _on_area_effect_shown(vfx_path: String, position: Vector2, radius: float) -> void:
+	ring(position, radius, vfx_path)
 
 
 func _on_damage_dealt(_target: Node2D, amount: int, is_crit: bool, position: Vector2) -> void:

@@ -16,6 +16,8 @@ signal boss_health_changed(current: int, maximum: int)
 signal damage_dealt(target: Node2D, amount: int, is_crit: bool, position: Vector2)
 signal player_health_changed(current: int, maximum: int)
 signal player_died(death_reason: String)
+## Visual-only: an area effect (explosion, heal wave) happened; VFX listens to it.
+signal area_effect_shown(vfx_path: String, position: Vector2, radius: float)
 
 # Progression
 signal player_xp_changed(level: int, xp_into_level: int, xp_for_next: int)
