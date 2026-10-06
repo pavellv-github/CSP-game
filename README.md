@@ -55,6 +55,18 @@ IOS_TEAM_ID=XXXXXXXXXX tools/build.sh ios   # build/ios/PixelFantasySurvival.xco
 
 CI (`.github/workflows/build.yml`): на каждый push/PR — тесты и debug APK (артефакт `android-apk`); release APK — если заданы секреты `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_ALIAS`, `ANDROID_KEYSTORE_PASSWORD`; iOS Xcode-проект — на тегах `v*` или вручную, при наличии секрета `IOS_TEAM_ID`.
 
+## Агенты Claude Code
+
+Эталонные агенты лежат в `tools/claude/agents/` (developer, tester, designer, manager); локальная папка `.claude/` не коммитится и собирается одной командой:
+
+```bash
+tools/claude/setup.sh                               # только агенты -> .claude/agents
+GODOT=/path/to/Godot tools/claude/setup.sh --recommended   # + Godot-скиллы, ревью/коммиты, Godot MCP
+GODOT=/path/to/Godot tools/claude/setup.sh --all           # + Supabase, Firebase, Aseprite (pixel art)
+```
+
+Плагины и MCP ставятся в scope `local` — только для этой копии репозитория. Список рекомендаций и его состав — в начале `tools/claude/setup.sh`. Изменения агентов вносятся в `tools/claude/agents/` и раздаются повторным запуском скрипта (локально изменённые файлы не перезаписываются без `--force`).
+
 ## Как устроено (соответствие ТЗ)
 
 | ТЗ | Реализация |

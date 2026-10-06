@@ -38,9 +38,11 @@ backend/supabase/.temp/
 .env
 .env.*
 
-# Local tooling: IDE settings and MCP servers with machine-specific addresses
+# Local tooling: IDE settings, MCP servers with machine-specific addresses,
+# Claude Code agents/settings (installed from tools/claude via tools/claude/setup.sh)
 .idea/
 .mcp.json
+.claude/
 
 # OS
 .DS_Store
