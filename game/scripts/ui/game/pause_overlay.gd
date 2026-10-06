@@ -10,12 +10,12 @@ func _init() -> void:
 
 func refresh() -> void:
 	clear_body()
-	body.add_child(UiKit.title("Paused"))
-	body.add_child(UiKit.button("Resume", _resume, 34))
-	body.add_child(UiKit.button("Leave to levels", func() -> void:
+	body.add_child(UiKit.title(Loc.t("PAUSE_TITLE")))
+	body.add_child(UiKit.button(Loc.t("PAUSE_RESUME"), _resume, 34))
+	body.add_child(UiKit.button(Loc.t("PAUSE_LEAVE"), func() -> void:
 		Profile.flush()
 		GameStateManager.change_state(State.LEVEL_SELECTION)))
-	body.add_child(UiKit.button("Main menu", func() -> void:
+	body.add_child(UiKit.button(Loc.t("COMMON_MAIN_MENU"), func() -> void:
 		Profile.flush()
 		GameStateManager.change_state(State.MENU)))
 

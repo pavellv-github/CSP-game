@@ -5,7 +5,7 @@ extends Control
 
 const HUD_ICON_DIR := "res://assets/ui/hud_icons/"
 ## Touch button caption -> icon file name in HUD_ICON_DIR (text is shown when the file is missing).
-const HUD_ICONS := {"ATK": "attack", "SKILL": "skill", "DASH": "dash", "BAG": "bag", "USE": "use"}
+const HUD_ICONS := {"HUD_ATTACK": "attack", "HUD_SKILL": "skill", "HUD_DASH": "dash", "HUD_BAG": "bag", "HUD_USE": "use"}
 
 var router: InputRouter
 
@@ -97,14 +97,14 @@ func _build_top_bar() -> void:
 	column.add_child(row)
 
 	var info := UiKit.hbox(8)
-	_level_label = UiKit.label("Lv 1", 8, UiKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT, false)
+	_level_label = UiKit.label(Loc.t("HUD_LEVEL") % 1, 8, UiKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT, false)
 	_timer_label = UiKit.label("0:00", 10, UiKit.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
 	_timer_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_kills_label = UiKit.label("0", 8, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_LEFT, false)
 	_gold_label = UiKit.label("0", 8, UiKit.ACCENT, HORIZONTAL_ALIGNMENT_LEFT, false)
 	info.add_child(_level_label)
 	info.add_child(_timer_label)
-	info.add_child(UiKit.label("Kills", 8, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_LEFT, false))
+	info.add_child(UiKit.label(Loc.t("HUD_KILLS"), 8, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_LEFT, false))
 	info.add_child(_kills_label)
 	info.add_child(UiKit.icon("res://assets/sprites/items/gold_coin.png", 8))
 	info.add_child(_gold_label)
@@ -112,15 +112,18 @@ func _build_top_bar() -> void:
 
 	_boss_box = UiKit.vbox(1)
 	_boss_box.visible = false
-	_boss_box.add_child(UiKit.label("Boss", 8, UiKit.DANGER, HORIZONTAL_ALIGNMENT_CENTER))
+	_boss_box.add_child(UiKit.label(Loc.t("HUD_BOSS"), 8, UiKit.DANGER, HORIZONTAL_ALIGNMENT_CENTER))
 	_boss_bar = UiKit.bar(UiKit.DANGER, 6)
 	_boss_box.add_child(_boss_bar)
 	column.add_child(_boss_box)
 
+	# Full width with wrapping: translated banners can be much longer than the English ones.
 	_banner = UiKit.title("")
-	_banner.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_banner.position.y -= 80
+	_banner.set_anchors_and_offsets_preset(Control.PRESET_HCENTER_WIDE)
+	_banner.anchor_top = 0.3
+	_banner.anchor_bottom = 0.3
+	_banner.offset_left = 16
+	_banner.offset_right = -16
 	_banner.modulate.a = 0.0
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_banner)
@@ -143,21 +146,21 @@ func _build_controls() -> void:
 	joystick.anchor_bottom = 1.0
 	controls.add_child(joystick)
 
-	var attack := _action_button(controls, "ATK", 52, Vector2(-62, -78), UiKit.DANGER)
+	var attack := _action_button(controls, "HUD_ATTACK", 52, Vector2(-62, -78), UiKit.DANGER)
 	attack.pressed.connect(func() -> void: router.press(InputSetup.ATTACK))
-	_skill_button = _action_button(controls, "SKILL", 42, Vector2(-120, -58), UiKit.ACCENT)
+	_skill_button = _action_button(controls, "HUD_SKILL", 42, Vector2(-120, -58), UiKit.ACCENT)
 	_skill_button.pressed.connect(func() -> void: router.press(InputSetup.SKILL))
-	_dash_button = _action_button(controls, "DASH", 38, Vector2(-54, -128), UiKit.XP)
+	_dash_button = _action_button(controls, "HUD_DASH", 38, Vector2(-54, -128), UiKit.XP)
 	_dash_button.pressed.connect(func() -> void: router.press(InputSetup.DASH))
-	var bag := _action_button(controls, "BAG", 30, Vector2(-110, -112), UiKit.TEXT_DIM)
+	var bag := _action_button(controls, "HUD_BAG", 30, Vector2(-110, -112), UiKit.TEXT_DIM)
 	bag.pressed.connect(func() -> void: router.press(InputSetup.INVENTORY))
-	var interact := _action_button(controls, "USE", 30, Vector2(-150, -100), Color("#7a9a5a"))
+	var interact := _action_button(controls, "HUD_USE", 30, Vector2(-150, -100), Color("#7a9a5a"))
 	interact.pressed.connect(func() -> void: router.press(InputSetup.INTERACT))
 
 
 func _action_button(parent: Control, text: String, diameter: float, offset_from_bottom_right: Vector2, tint: Color) -> TouchButton:
 	var button := TouchButton.new()
-	button.label = text
+	button.label = Loc.t(text)
 	button.icon = _hud_icon(HUD_ICONS.get(text, ""))
 	button.color = tint
 	button.anchor_left = 1.0
@@ -184,13 +187,13 @@ func _on_health_changed(current: int, maximum: int) -> void:
 
 
 func _on_xp_changed(level: int, xp_into_level: int, xp_for_next: int) -> void:
-	_level_label.text = "Lv %d" % level
+	_level_label.text = Loc.t("HUD_LEVEL") % level
 	_xp_bar.max_value = maxi(1, xp_for_next)
 	_xp_bar.value = xp_into_level
 
 
 func _on_time_changed(elapsed: float, duration: float) -> void:
-	_timer_label.text = UiKit.format_time(duration - elapsed) if elapsed < duration else "BOSS"
+	_timer_label.text = UiKit.format_time(duration - elapsed) if elapsed < duration else Loc.t("HUD_BOSS_TIMER")
 
 
 func _on_gold_changed(total: int) -> void:
@@ -204,9 +207,11 @@ func _on_enemy_killed(_enemy_id: String, _position: Vector2, _xp: int, _loot: St
 		_boss_box.visible = false
 
 
-func _on_boss_spawned(_boss: Node2D) -> void:
+func _on_boss_spawned(boss: Node2D) -> void:
 	_boss_box.visible = true
-	show_banner("The Guardian awakens!")
+	var enemy := boss as Enemy
+	if enemy != null:
+		show_banner(Loc.t("HUD_BOSS_AWAKENS") % Loc.name_of(enemy.definition))
 
 
 func _on_boss_health_changed(current: int, maximum: int) -> void:

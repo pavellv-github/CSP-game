@@ -6,12 +6,12 @@ var _reset_armed := false
 
 
 func _build() -> void:
-	content.add_child(UiKit.title("Settings"))
-	content.add_child(_slider("Music", "music_volume"))
-	content.add_child(_slider("Sound", "sfx_volume"))
-	content.add_child(_toggle("Auto attack", "auto_attack"))
-	content.add_child(_toggle("Vibration", "vibration"))
-	var reset := UiKit.button("Reset progress", func() -> void: pass)
+	content.add_child(UiKit.title(Loc.t("SETTINGS_TITLE")))
+	content.add_child(_slider(Loc.t("SETTINGS_MUSIC"), "music_volume"))
+	content.add_child(_slider(Loc.t("SETTINGS_SOUND"), "sfx_volume"))
+	content.add_child(_toggle(Loc.t("SETTINGS_AUTO_ATTACK"), "auto_attack"))
+	content.add_child(_toggle(Loc.t("SETTINGS_VIBRATION"), "vibration"))
+	var reset := UiKit.button(Loc.t("SETTINGS_RESET"), func() -> void: pass)
 	reset.pressed.connect(func() -> void:
 		if _reset_armed:
 			Profile.reset_progress()
@@ -19,10 +19,10 @@ func _build() -> void:
 			rebuild()
 		else:
 			_reset_armed = true
-			reset.text = "Tap again to erase everything"
+			reset.text = Loc.t("SETTINGS_RESET_CONFIRM")
 			reset.add_theme_color_override("font_color", UiKit.DANGER))
 	content.add_child(reset)
-	content.add_child(UiKit.button("Back", func() -> void:
+	content.add_child(UiKit.button(Loc.t("COMMON_BACK"), func() -> void:
 		Profile.flush()
 		GameStateManager.change_state(State.MENU)))
 

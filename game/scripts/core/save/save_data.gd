@@ -10,7 +10,7 @@ extends RefCounted
 ##   upgrades:         {upgrade_id: level},          # meta upgrades only
 ##   buildings:        [{id, type, position, level}], # reserved
 ##   completed_levels: {level_id: {completions, best_time}},
-##   settings:         {music_volume, sfx_volume, vibration, auto_attack}
+##   settings:         {music_volume, sfx_volume, vibration, auto_attack, language}
 ## }
 
 const CURRENT_VERSION := 1
@@ -43,4 +43,5 @@ static func default_settings() -> Dictionary:
 		"sfx_volume": 1.0,
 		"vibration": true,
 		"auto_attack": true,
+		"language": "ru",
 	}

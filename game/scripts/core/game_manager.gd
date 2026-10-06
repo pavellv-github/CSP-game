@@ -14,6 +14,7 @@ var last_run_summary: Dictionary = {}
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	InputSetup.ensure_actions()
+	Loc.apply_locale(str(Profile.get_setting("language", Loc.DEFAULT_LOCALE)))
 	get_tree().set_auto_accept_quit(false)
 	get_tree().set_quit_on_go_back(false)
 

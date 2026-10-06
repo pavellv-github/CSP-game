@@ -13,30 +13,30 @@ func _init() -> void:
 
 func refresh() -> void:
 	clear_body()
-	body.add_child(UiKit.title("Bag"))
-	body.add_child(UiKit.label("Gold: %d" % Profile.get_gold(), 10, UiKit.ACCENT, HORIZONTAL_ALIGNMENT_CENTER))
+	body.add_child(UiKit.title(Loc.t("BAG_TITLE")))
+	body.add_child(UiKit.label(Loc.t("COMMON_GOLD") % Profile.get_gold(), 10, UiKit.ACCENT, HORIZONTAL_ALIGNMENT_CENTER))
 	var entries := Profile.get_inventory()
 	if entries.is_empty():
-		body.add_child(UiKit.label("Empty", 10, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
+		body.add_child(UiKit.label(Loc.t("BAG_EMPTY"), 10, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	for entry in entries:
 		var item := Content.get_item(str(entry["item_id"]))
 		if item != null:
 			body.add_child(_row(item, int(entry["quantity"]), bool(entry.get("equipped", false))))
-	body.add_child(UiKit.button("Close", func() -> void: GameStateManager.change_state(State.GAMEPLAY), 30))
+	body.add_child(UiKit.button(Loc.t("COMMON_CLOSE"), func() -> void: GameStateManager.change_state(State.GAMEPLAY), 30))
 
 
 func _row(item: ItemDefinition, quantity: int, equipped: bool) -> Control:
 	var row := UiKit.hbox(6)
 	row.add_child(UiKit.icon(item.icon, 16))
-	var name_label := UiKit.label("%s x%d" % [item.name, quantity] if item.stackable else item.name, 10)
+	var name_label := UiKit.label(Loc.t("COMMON_ITEM_QUANTITY") % [Loc.name_of(item), quantity] if item.stackable else Loc.name_of(item), 10)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(name_label)
 	if item.is_usable():
-		row.add_child(UiKit.button("Use", func() -> void:
+		row.add_child(UiKit.button(Loc.t("BAG_USE"), func() -> void:
 			if player != null and player.inventory.use_item(item.id):
 				refresh()))
 	elif item.is_equippable():
-		row.add_child(UiKit.button("Unequip" if equipped else "Equip", func() -> void:
+		row.add_child(UiKit.button(Loc.t("BAG_UNEQUIP") if equipped else Loc.t("BAG_EQUIP"), func() -> void:
 			Profile.set_equipped(item.id, not equipped)
 			refresh()))
 	return row

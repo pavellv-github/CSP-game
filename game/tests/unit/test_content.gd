@@ -79,3 +79,33 @@ func test_all_sprite_sheets_fit_their_textures() -> void:
 		assert_eq((definition as CharacterDefinition).sheet.validate(definition.id), [] as Array[String])
 	for definition in Content.enemies.get_all():
 		assert_eq((definition as EnemyDefinition).sheet.validate(definition.id), [] as Array[String])
+
+
+func test_published_content_is_translated_to_russian() -> void:
+	var ru := _russian_keys("res://translations/content.csv")
+	for repository in [Content.characters, Content.enemies, Content.items, Content.levels, Content.skills, Content.upgrades]:
+		for definition: ContentDefinition in repository.get_all():
+			assert_true(ru.has(Loc.content_key(definition.id, "NAME")), "no Russian name for %s" % definition.id)
+			if not str(definition.raw.get("description", "")).is_empty():
+				assert_true(ru.has(Loc.content_key(definition.id, "DESC")), "no Russian description for %s" % definition.id)
+
+
+func test_ui_keys_have_both_languages() -> void:
+	var file := FileAccess.open("res://translations/ui.csv", FileAccess.READ)
+	file.get_csv_line()
+	while not file.eof_reached():
+		var row := file.get_csv_line()
+		if row.size() < 3 or row[0].is_empty():
+			continue
+		assert_false(row[1].is_empty() or row[2].is_empty(), "missing translation for %s" % row[0])
+
+
+func _russian_keys(path: String) -> Dictionary:
+	var keys := {}
+	var file := FileAccess.open(path, FileAccess.READ)
+	file.get_csv_line()
+	while not file.eof_reached():
+		var row := file.get_csv_line()
+		if row.size() >= 3 and not row[2].is_empty():
+			keys[row[0]] = true
+	return keys

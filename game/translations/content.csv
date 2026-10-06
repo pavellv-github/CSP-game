@@ -1,0 +1,43 @@
+keys,en,ru
+CHARACTER_WARRIOR_NAME,Warrior,Воин
+CHARACTER_WARRIOR_DESC,Sturdy melee fighter. Cleaves enemies in front of him.,Стойкий боец ближнего боя. Рассекает врагов перед собой.
+CHARACTER_MAGE_NAME,Mage,Маг
+CHARACTER_MAGE_DESC,Fragile caster.,Хрупкий заклинатель.
+ENEMY_GOBLIN_NAME,Goblin,Гоблин
+ENEMY_WOLF_NAME,Wolf,Волк
+ENEMY_SKELETON_NAME,Skeleton Archer,Скелет-лучник
+ENEMY_SLIME_NAME,Slime,Слизень
+ENEMY_FOREST_GUARDIAN_NAME,Forest Guardian,Страж леса
+ITEM_GOLD_COIN_NAME,Gold,Золото
+ITEM_HEALTH_POTION_NAME,Health Potion,Зелье лечения
+ITEM_IRON_SWORD_NAME,Iron Sword,Железный меч
+LEVEL_FOREST_01_NAME,Whispering Forest,Шепчущий лес
+LEVEL_FOREST_02_NAME,Wolf Glade,Волчья поляна
+LEVEL_CAVE_01_NAME,Bone Cave,Костяная пещера
+SKILL_HEAVY_STRIKE_NAME,Heavy Strike,Тяжёлый удар
+SKILL_HEAVY_STRIKE_DESC,"Slams the ground, damaging every enemy around.","Удар о землю, ранящий всех врагов вокруг."
+UPGRADE_ATTACK_01_NAME,Sharpened Blade,Заточенный клинок
+UPGRADE_ATTACK_01_DESC,+5 damage,+5 к урону
+UPGRADE_HEALTH_01_NAME,Toughness,Стойкость
+UPGRADE_HEALTH_01_DESC,+25 max HP,+25 к здоровью
+UPGRADE_SPEED_01_NAME,Swift Boots,Быстрые сапоги
+UPGRADE_SPEED_01_DESC,+8% move speed,+8% к скорости
+UPGRADE_DEFENSE_01_NAME,Iron Skin,Железная кожа
+UPGRADE_DEFENSE_01_DESC,+3 defense,+3 к защите
+UPGRADE_ATTACK_SPEED_NAME,Berserker,Берсерк
+UPGRADE_ATTACK_SPEED_DESC,+12% attack speed,+12% к скорости атаки
+UPGRADE_ATTACK_RANGE_NAME,Cleave,Широкий замах
+UPGRADE_ATTACK_RANGE_DESC,+15% attack range,+15% к дальности атаки
+UPGRADE_CRIT_01_NAME,Keen Eye,Зоркий глаз
+UPGRADE_CRIT_01_DESC,+5% crit chance,+5% к шансу крита
+UPGRADE_HEAVY_STRIKE_POWER_NAME,Earthshaker,Сотрясатель земли
+UPGRADE_HEAVY_STRIKE_POWER_DESC,"Heavy Strike: +20% radius, -10% cooldown","Тяжёлый удар: радиус +20%, перезарядка −10%"
+UPGRADE_HEAL_NOW_NAME,Second Wind,Второе дыхание
+UPGRADE_HEAL_NOW_DESC,Restore 40% HP,Восстанавливает 40% здоровья
+UPGRADE_META_DAMAGE_NAME,Training: Strength,Тренировка: сила
+UPGRADE_META_DAMAGE_DESC,+2 base damage per level,+2 к базовому урону за уровень
+UPGRADE_META_HEALTH_NAME,Training: Vitality,Тренировка: живучесть
+UPGRADE_META_HEALTH_DESC,+10 base HP per level,+10 к базовому здоровью за уровень
+UPGRADE_META_DEFENSE_NAME,Training: Guard,Тренировка: защита
+UPGRADE_META_DEFENSE_DESC,+1 base defense per level,+1 к базовой защите за уровень
+BUILDING_CAMP_NAME,Camp,Лагерь

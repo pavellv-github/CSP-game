@@ -12,11 +12,11 @@ func _init() -> void:
 func refresh() -> void:
 	clear_body()
 	var summary := GameManager.last_run_summary
-	body.add_child(UiKit.title("Defeated"))
-	body.add_child(UiKit.label("Survived %s · Kills %d · Level %d" % [
+	body.add_child(UiKit.title(Loc.t("DEFEAT_TITLE")))
+	body.add_child(UiKit.label(Loc.t("DEFEAT_SUMMARY") % [
 		UiKit.format_time(float(summary.get("time", 0.0))), int(summary.get("kills", 0)), int(summary.get("player_level", 1))],
 		10, UiKit.TEXT, HORIZONTAL_ALIGNMENT_CENTER))
-	body.add_child(UiKit.label("Gold and items you picked up are kept.", 8, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
-	body.add_child(UiKit.button("Retry", func() -> void: GameManager.retry(), 34))
-	body.add_child(UiKit.button("Levels", func() -> void: GameStateManager.change_state(State.LEVEL_SELECTION)))
-	body.add_child(UiKit.button("Main menu", func() -> void: GameStateManager.change_state(State.MENU)))
+	body.add_child(UiKit.label(Loc.t("DEFEAT_KEPT"), 8, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
+	body.add_child(UiKit.button(Loc.t("DEFEAT_RETRY"), func() -> void: GameManager.retry(), 34))
+	body.add_child(UiKit.button(Loc.t("DEFEAT_LEVELS"), func() -> void: GameStateManager.change_state(State.LEVEL_SELECTION)))
+	body.add_child(UiKit.button(Loc.t("COMMON_MAIN_MENU"), func() -> void: GameStateManager.change_state(State.MENU)))

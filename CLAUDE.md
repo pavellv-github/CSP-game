@@ -6,6 +6,7 @@
 - Контент только в `game/data/*.json` со стабильными ID; доступ через `Content`, данные игрока — через `Profile`.
 - Системы общаются через `EventBus`; состояния меняются только через `GameStateManager`.
 - UI без игровой логики; тема — `UiKit.shared_theme()` (палитра из ключарта).
+- Игра на русском (локализация `TranslationServer`, колонки ru/en): все тексты UI — ключи в `game/translations/ui.csv` через `Loc.t()`; названия и описания контента — `Loc.name_of()/desc_of()` и ключи `<ID>_NAME/_DESC` в `game/translations/content.csv`. Строки прямо в коде не писать; тест проверяет, что у контента есть русский перевод.
 - Версию Godot не менять.
 - Проверка: `GODOT=/Applications/Godot.app/Contents/MacOS/Godot tools/build.sh test`.
 - Не коммитить и не пушить без явной просьбы.

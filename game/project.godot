@@ -71,3 +71,8 @@ textures/canvas_textures/default_texture_filter=0
 2d/snap/snap_2d_vertices_to_pixel=true
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.0705882, 0.0627451, 0.0745098, 1)
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://translations/ui.en.translation", "res://translations/ui.ru.translation", "res://translations/content.en.translation", "res://translations/content.ru.translation")
+locale/fallback="en"

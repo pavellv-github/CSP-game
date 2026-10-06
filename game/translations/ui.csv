@@ -1,0 +1,68 @@
+keys,en,ru
+GAME_TITLE,Pixel Fantasy\nSurvival,Pixel Fantasy\nSurvival
+MENU_PLAY,Play,Играть
+MENU_SETTINGS,Settings,Настройки
+MENU_QUIT,Quit,Выход
+MENU_VERSION,v%s · content %d,v%s · контент %d
+COMMON_GOLD,Gold: %d,Золото: %d
+COMMON_BACK,Back,Назад
+COMMON_LOCKED,Locked,Закрыто
+COMMON_MAIN_MENU,Main menu,Главное меню
+COMMON_CLOSE,Close,Закрыть
+COMMON_ITEM_QUANTITY,%s x%d,%s ×%d
+HERO_TITLE,Hero,Герой
+HERO_TRAINING,Training,Тренировка
+HERO_TO_LEVELS,Choose level,К уровням
+HERO_SELECTED,Selected,Выбран
+HERO_PICK,Pick,Выбрать
+HERO_STATS,HP %d  DMG %d\nDEF %d  SPD %d,Здоровье %d  Урон %d\nЗащита %d  Скорость %d
+UPGRADE_PROGRESS,%s  %d/%d,%s  %d/%d
+UPGRADE_MAX,Max,Макс.
+UPGRADE_PRICE,%d g,%d зол.
+LEVELS_TITLE,Levels,Уровни
+LEVELS_HERO,Hero: %s,Герой: %s
+LEVELS_TO_HERO,Hero,Герой
+LEVELS_TO_MENU,Menu,Меню
+LEVELS_CLEARED,cleared,пройден
+LEVELS_DETAILS,Difficulty %d · %s · boss,Сложность %d · %s · босс
+LEVELS_PLAY,Play,Играть
+SETTINGS_TITLE,Settings,Настройки
+SETTINGS_MUSIC,Music,Музыка
+SETTINGS_SOUND,Sound,Звуки
+SETTINGS_AUTO_ATTACK,Auto attack,Автоатака
+SETTINGS_VIBRATION,Vibration,Вибрация
+SETTINGS_RESET,Reset progress,Сбросить прогресс
+SETTINGS_RESET_CONFIRM,Tap again to erase everything,Нажмите ещё раз — всё будет стёрто
+LOADING_TITLE,Loading,Загрузка
+LOADING_TEXT,Loading...,Загрузка…
+LEVEL_UP_TITLE,Level %d!,Уровень %d!
+LEVEL_UP_CHOOSE,Choose an upgrade,Выберите улучшение
+LEVEL_UP_CHOICE,%s  (%d/%d)\n%s,%s  (%d/%d)\n%s
+VICTORY_TITLE,Victory!,Победа!
+VICTORY_SUMMARY,Time %s · Kills %d · Level %d,Время %s · Убито %d · Уровень %d
+VICTORY_REWARDS,Rewards,Награды
+VICTORY_TRAIN,Train hero,Тренировать героя
+VICTORY_NEXT,Next level,Следующий уровень
+DEFEAT_TITLE,Defeated,Поражение
+DEFEAT_SUMMARY,Survived %s · Kills %d · Level %d,Продержались %s · Убито %d · Уровень %d
+DEFEAT_KEPT,Gold and items you picked up are kept.,Собранное золото и предметы сохранены.
+DEFEAT_RETRY,Retry,Ещё раз
+DEFEAT_LEVELS,Levels,К уровням
+PAUSE_TITLE,Paused,Пауза
+PAUSE_RESUME,Resume,Продолжить
+PAUSE_LEAVE,Leave to levels,Выйти к уровням
+BAG_TITLE,Bag,Сумка
+BAG_EMPTY,Empty,Пусто
+BAG_USE,Use,Применить
+BAG_EQUIP,Equip,Надеть
+BAG_UNEQUIP,Unequip,Снять
+HUD_ATTACK,ATK,УДАР
+HUD_SKILL,SKILL,НАВЫК
+HUD_DASH,DASH,РЫВОК
+HUD_BAG,BAG,СУМКА
+HUD_USE,USE,ДЕЙСТВ.
+HUD_LEVEL,Lv %d,Ур. %d
+HUD_KILLS,Kills,Убито
+HUD_BOSS,Boss,Босс
+HUD_BOSS_TIMER,BOSS,БОСС
+HUD_BOSS_AWAKENS,%s awakens!,%s пробуждается!

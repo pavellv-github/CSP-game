@@ -102,7 +102,7 @@ func _ready() -> void:
 	_build_ui()
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.run_started.emit(level.id, character.id)
-	hud.show_banner(level.name)
+	hud.show_banner(Loc.name_of(level))
 
 
 func _build_ui() -> void:

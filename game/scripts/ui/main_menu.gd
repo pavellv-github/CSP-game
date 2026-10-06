@@ -47,16 +47,16 @@ func _build() -> void:
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0, 150)
 	content.add_child(spacer)
-	content.add_child(UiKit.title("Pixel Fantasy\nSurvival"))
-	content.add_child(UiKit.label("Gold: %d" % Profile.get_gold(), 10, UiKit.ACCENT, HORIZONTAL_ALIGNMENT_CENTER))
+	content.add_child(UiKit.title(Loc.t("GAME_TITLE")))
+	content.add_child(UiKit.label(Loc.t("COMMON_GOLD") % Profile.get_gold(), 10, UiKit.ACCENT, HORIZONTAL_ALIGNMENT_CENTER))
 	var spacer2 := Control.new()
 	spacer2.custom_minimum_size = Vector2(0, 40)
 	content.add_child(spacer2)
-	content.add_child(UiKit.button("Play", func() -> void: GameStateManager.change_state(State.CHARACTER_SELECTION), 36))
-	content.add_child(UiKit.button("Settings", func() -> void: GameStateManager.change_state(State.SETTINGS)))
+	content.add_child(UiKit.button(Loc.t("MENU_PLAY"), func() -> void: GameStateManager.change_state(State.CHARACTER_SELECTION), 36))
+	content.add_child(UiKit.button(Loc.t("MENU_SETTINGS"), func() -> void: GameStateManager.change_state(State.SETTINGS)))
 	if OS.has_feature("pc"):
-		content.add_child(UiKit.button("Quit", func() -> void:
+		content.add_child(UiKit.button(Loc.t("MENU_QUIT"), func() -> void:
 			Profile.flush()
 			get_tree().quit()))
-	var version := "v%s · content %d" % [Services.config.game_version(), Content.content_version]
+	var version := Loc.t("MENU_VERSION") % [Services.config.game_version(), Content.content_version]
 	content.add_child(UiKit.label(version, 8, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))

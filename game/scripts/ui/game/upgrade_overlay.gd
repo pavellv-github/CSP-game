@@ -25,11 +25,11 @@ func set_choices(upgrades: Array[UpgradeDefinition], owned_levels: Dictionary, l
 
 func refresh() -> void:
 	clear_body()
-	body.add_child(UiKit.title("Level %d!" % player_level))
-	body.add_child(UiKit.label("Choose an upgrade", 10, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
+	body.add_child(UiKit.title(Loc.t("LEVEL_UP_TITLE") % player_level))
+	body.add_child(UiKit.label(Loc.t("LEVEL_UP_CHOOSE"), 10, UiKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	for upgrade in choices:
 		var level := int(owned.get(upgrade.id, 0))
-		var text := "%s  (%d/%d)\n%s" % [upgrade.name, level + 1, upgrade.max_level, upgrade.description]
+		var text := Loc.t("LEVEL_UP_CHOICE") % [Loc.name_of(upgrade), level + 1, upgrade.max_level, Loc.desc_of(upgrade)]
 		var button := UiKit.button(text, func() -> void: upgrade_chosen.emit(upgrade.id), 44)
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.add_theme_font_size_override("font_size", 10)

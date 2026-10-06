@@ -55,6 +55,10 @@ IOS_TEAM_ID=XXXXXXXXXX tools/build.sh ios   # build/ios/PixelFantasySurvival.xco
 
 CI (`.github/workflows/build.yml`): на каждый push/PR — тесты и debug APK (артефакт `android-apk`); release APK — если заданы секреты `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_ALIAS`, `ANDROID_KEYSTORE_PASSWORD`; iOS Xcode-проект — на тегах `v*` или вручную, при наличии секрета `IOS_TEAM_ID`.
 
+## Язык
+
+Игра на русском; английский заведён второй колонкой для будущего релиза. Переводы — `game/translations/ui.csv` (интерфейс, семантические ключи) и `game/translations/content.csv` (названия и описания по ID контента: `character_warrior` → `CHARACTER_WARRIOR_NAME`). Язык хранится в настройках профиля (`language`, по умолчанию `ru`) и применяется при запуске (`Loc.apply_locale`).
+
 ## Графика
 
 - Референс стиля: `docs/art/reference/heroes_keyart.png`; ТЗ на графику для художника: `docs/art/ART_BRIEF.md`.
