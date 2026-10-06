@@ -2,10 +2,23 @@
 game/.godot/
 game/android/
 *.translation
+# Export credentials (keystore passwords, Apple team/profiles) are stored by Godot here
 export_credentials.cfg
+# Temporary preset copy made by tools/build.sh ios during export
+export_presets.cfg.bak
+# Self-contained Godot editor data (editor settings with local SDK/JDK paths, export templates)
+editor_data/
+._sc_
+_sc_
 
 # Build output
 build/
+*.apk
+*.aab
+*.idsig
+*.ipa
+*.xcarchive
+*.dSYM/
 
 # Signing
 *.keystore
@@ -13,11 +26,21 @@ build/
 *.p12
 *.mobileprovision
 
-# Local env
+# Firebase native configs (per-environment, added with the Firebase plugins)
+google-services.json
+GoogleService-Info.plist
+
+# Supabase local state
+backend/supabase/.branches/
+backend/supabase/.temp/
+
+# Local env / secrets
 .env
 .env.*
 
-# OS / IDE
+# Local tooling: IDE settings and MCP servers with machine-specific addresses
+.idea/
+.mcp.json
+
+# OS
 .DS_Store
-.idea/workspace.xml
-.idea/shelf/
