@@ -1,0 +1,73 @@
+; Engine configuration file.
+; Pinned engine version: Godot 4.5.2 (see README). Upgrading is a separate migration task.
+
+config_version=5
+
+[application]
+
+config/name="Pixel Fantasy Survival"
+config/description="Pixel art fantasy survival / action RPG (MVP)"
+config/version="0.1.0"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.5", "GL Compatibility")
+boot_splash/bg_color=Color(0.0784314, 0.0666667, 0.0980392, 1)
+boot_splash/show_image=false
+config/icon="res://icon.svg"
+
+[autoload]
+
+EventBus="*res://scripts/core/event_bus.gd"
+Content="*res://scripts/core/content_database.gd"
+SaveManager="*res://scripts/core/save_manager.gd"
+Profile="*res://scripts/progression/profile_repository.gd"
+Services="*res://scripts/services/services.gd"
+AudioManager="*res://scripts/core/audio_manager.gd"
+GameStateManager="*res://scripts/core/game_state_manager.gd"
+SceneManager="*res://scripts/core/scene_manager.gd"
+GameManager="*res://scripts/core/game_manager.gd"
+
+[debug]
+
+gdscript/warnings/untyped_declaration=1
+gdscript/warnings/unsafe_property_access=0
+gdscript/warnings/unsafe_method_access=0
+gdscript/warnings/unused_signal=0
+
+[display]
+
+window/size/viewport_width=360
+window/size/viewport_height=640
+window/size/window_width_override=405
+window/size/window_height_override=720
+window/stretch/mode="viewport"
+window/stretch/aspect="expand"
+window/stretch/scale_mode="integer"
+window/handheld/orientation=1
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[layer_names]
+
+2d_physics/layer_1="world"
+2d_physics/layer_2="player"
+2d_physics/layer_3="enemies"
+2d_physics/layer_4="player_projectiles"
+2d_physics/layer_5="enemy_projectiles"
+2d_physics/layer_6="pickups"
+
+[physics]
+
+common/physics_ticks_per_second=60
+2d/default_gravity=0.0
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true
+textures/vram_compression/import_etc2_astc=true
+environment/defaults/default_clear_color=Color(0.0784314, 0.0666667, 0.0980392, 1)

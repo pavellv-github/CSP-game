@@ -1,0 +1,135 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: "4.5.2"
+  GODOT_RELEASE: "4.5.2-stable"
+  TEMPLATES_DIR_NAME: "4.5.2.stable"
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo mv "Godot_v${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
+          godot --version
+
+      - name: Unit + smoke tests
+        run: tools/build.sh test
+
+  android:
+    name: Android APK
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Godot
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo mv "Godot_v${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
+
+      - name: Cache export templates
+        id: templates-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/${{ env.TEMPLATES_DIR_NAME }}
+          key: godot-templates-android-${{ env.GODOT_RELEASE }}
+
+      - name: Install Android export templates
+        if: steps.templates-cache.outputs.cache-hit != 'true'
+        run: |
+          dir="$HOME/.local/share/godot/export_templates/${TEMPLATES_DIR_NAME}"
+          mkdir -p "$dir"
+          curl -sSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_export_templates.tpz"
+          unzip -j -o templates.tpz "templates/android_*" "templates/version.txt" -d "$dir"
+          rm templates.tpz
+
+      - name: Configure Godot editor settings (Android SDK / JDK)
+        run: |
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-4.5.tres <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "${ANDROID_HOME}"
+          export/android/java_sdk_path = "${JAVA_HOME}"
+          EOF
+
+      - name: Debug APK
+        run: tools/build.sh android-debug
+
+      - name: Release APK (when signing secrets are configured)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        if: env.KEYSTORE_BASE64 != ''
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+          export GODOT_ANDROID_KEYSTORE_RELEASE_PATH="$RUNNER_TEMP/release.keystore"
+          tools/build.sh android-release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build/android/*.apk
+
+  ios:
+    name: iOS Xcode project
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    env:
+      IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check signing configuration
+        if: env.IOS_TEAM_ID == ''
+        run: |
+          echo "::warning::IOS_TEAM_ID secret is not set — skipping iOS export."
+
+      - name: Install Godot
+        if: env.IOS_TEAM_ID != ''
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_macos.universal.zip"
+          unzip -q godot.zip
+          echo "GODOT=$PWD/Godot.app/Contents/MacOS/Godot" >> "$GITHUB_ENV"
+
+      - name: Install iOS export templates
+        if: env.IOS_TEAM_ID != ''
+        run: |
+          dir="$HOME/Library/Application Support/Godot/export_templates/${TEMPLATES_DIR_NAME}"
+          mkdir -p "$dir"
+          curl -sSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_export_templates.tpz"
+          unzip -j -o templates.tpz "templates/ios.zip" "templates/version.txt" -d "$dir"
+          rm templates.tpz
+
+      - name: Export Xcode project
+        if: env.IOS_TEAM_ID != ''
+        run: tools/build.sh ios
+
+      - uses: actions/upload-artifact@v4
+        if: env.IOS_TEAM_ID != ''
+        with:
+          name: ios-xcode-project
+          path: build/ios/

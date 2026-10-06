@@ -1,0 +1,30 @@
+{
+	"game_version": "0.1.0",
+	"content_version": 1,
+	"feature_flags": {
+		"auto_attack": true,
+		"analytics_enabled": true,
+		"crash_reporting_enabled": true,
+		"buildings_enabled": false,
+		"skill_tree_enabled": false,
+		"cloud_save_enabled": false
+	},
+	"balance": {
+		"enemy_hp_multiplier": 1.0,
+		"enemy_damage_multiplier": 1.0,
+		"xp_multiplier": 1.0,
+		"loot_multiplier": 1.0,
+		"player_damage_multiplier": 1.0,
+		"difficulty_hp_step": 0.25,
+		"difficulty_damage_step": 0.15
+	},
+	"limits": {
+		"max_alive_enemies": 120,
+		"spawn_distance_min": 360,
+		"spawn_distance_max": 420
+	},
+	"run": {
+		"upgrade_choices": 3,
+		"default_character_id": "character_warrior"
+	}
+}

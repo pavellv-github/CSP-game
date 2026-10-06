@@ -1,0 +1,16 @@
+{
+	"content_version": 1,
+	"collections": {
+		"characters": "res://data/characters/characters.json",
+		"enemies": "res://data/enemies/enemies.json",
+		"items": "res://data/items/items.json",
+		"loot_tables": "res://data/items/loot_tables.json",
+		"levels": "res://data/levels/levels.json",
+		"skills": "res://data/skills/skills.json",
+		"skill_nodes": "res://data/skills/skill_nodes.json",
+		"upgrades": "res://data/progression/upgrades.json",
+		"xp_curve": "res://data/progression/xp_curve.json",
+		"buildings": "res://data/buildings/buildings.json"
+	},
+	"config": "res://data/config/game_config.json"
+}

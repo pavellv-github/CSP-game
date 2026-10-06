@@ -1,0 +1,17 @@
+{
+	"content_version": 1,
+	"items": [
+		{ "id": "upgrade_attack_01", "status": "published", "scope": "run", "name": "Sharpened Blade", "description": "+5 damage", "type": "stat", "stat": "damage", "mode": "add", "value": 5, "max_level": 10, "cost": 0, "prerequisites": [], "effects": [] },
+		{ "id": "upgrade_health_01", "status": "published", "scope": "run", "name": "Toughness", "description": "+25 max HP", "type": "stat", "stat": "max_health", "mode": "add", "value": 25, "max_level": 10, "cost": 0, "prerequisites": [], "effects": [] },
+		{ "id": "upgrade_speed_01", "status": "published", "scope": "run", "name": "Swift Boots", "description": "+8% move speed", "type": "stat", "stat": "speed", "mode": "multiply", "value": 0.08, "max_level": 5, "cost": 0, "prerequisites": [], "effects": [] },
+		{ "id": "upgrade_defense_01", "status": "published", "scope": "run", "name": "Iron Skin", "description": "+3 defense", "type": "stat", "stat": "defense", "mode": "add", "value": 3, "max_level": 8, "cost": 0, "prerequisites": [], "effects": [] },
+		{ "id": "upgrade_attack_speed", "status": "published", "scope": "run", "name": "Berserker", "description": "+12% attack speed", "type": "stat", "stat": "attack_speed", "mode": "multiply", "value": 0.12, "max_level": 6, "cost": 0, "prerequisites": [], "effects": [] },
+		{ "id": "upgrade_attack_range", "status": "published", "scope": "run", "name": "Cleave", "description": "+15% attack range", "type": "stat", "stat": "attack_range", "mode": "multiply", "value": 0.15, "max_level": 4, "cost": 0, "prerequisites": [], "effects": [] },
+		{ "id": "upgrade_crit_01", "status": "published", "scope": "run", "name": "Keen Eye", "description": "+5% crit chance", "type": "stat", "stat": "crit_chance", "mode": "add", "value": 0.05, "max_level": 5, "cost": 0, "prerequisites": [], "effects": [] },
+		{ "id": "upgrade_heavy_strike_power", "status": "published", "scope": "run", "name": "Earthshaker", "description": "Heavy Strike: +20% radius, -10% cooldown", "type": "skill_modifier", "skill_id": "skill_heavy_strike", "max_level": 3, "cost": 0, "prerequisites": [], "effects": [{ "param": "radius", "mode": "multiply", "value": 0.2 }, { "param": "cooldown", "mode": "multiply", "value": -0.1 }] },
+		{ "id": "upgrade_heal_now", "status": "published", "scope": "run", "name": "Second Wind", "description": "Restore 40% HP", "type": "heal", "value": 0.4, "max_level": 99, "cost": 0, "prerequisites": [], "effects": [] },
+		{ "id": "upgrade_meta_damage", "status": "published", "scope": "meta", "name": "Training: Strength", "description": "+2 base damage per level", "type": "stat", "stat": "damage", "mode": "add", "value": 2, "max_level": 10, "cost": 40, "cost_growth": 1.5, "prerequisites": [], "effects": [] },
+		{ "id": "upgrade_meta_health", "status": "published", "scope": "meta", "name": "Training: Vitality", "description": "+10 base HP per level", "type": "stat", "stat": "max_health", "mode": "add", "value": 10, "max_level": 10, "cost": 40, "cost_growth": 1.5, "prerequisites": [], "effects": [] },
+		{ "id": "upgrade_meta_defense", "status": "published", "scope": "meta", "name": "Training: Guard", "description": "+1 base defense per level", "type": "stat", "stat": "defense", "mode": "add", "value": 1, "max_level": 10, "cost": 60, "cost_growth": 1.6, "prerequisites": ["upgrade_meta_health"], "effects": [] }
+	]
+}

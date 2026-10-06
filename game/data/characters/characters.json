@@ -1,0 +1,45 @@
+{
+	"content_version": 1,
+	"items": [
+		{
+			"id": "character_warrior",
+			"status": "published",
+			"name": "Warrior",
+			"description": "Sturdy melee fighter. Cleaves enemies in front of him.",
+			"sprite": "res://assets/sprites/characters/warrior.png",
+			"frames": 2,
+			"base_health": 150,
+			"base_damage": 20,
+			"base_speed": 80,
+			"base_defense": 10,
+			"attack_range": 36,
+			"attack_speed": 1.2,
+			"attack_arc_degrees": 120,
+			"crit_chance": 0.05,
+			"crit_multiplier": 1.5,
+			"pickup_radius": 40,
+			"skills": ["skill_heavy_strike"],
+			"unlock_condition": { "type": "default" }
+		},
+		{
+			"id": "character_mage",
+			"status": "draft",
+			"name": "Mage",
+			"description": "Fragile caster. Not part of the MVP: kept as draft content to exercise the publishing pipeline.",
+			"sprite": "res://assets/sprites/characters/mage.png",
+			"frames": 2,
+			"base_health": 90,
+			"base_damage": 26,
+			"base_speed": 78,
+			"base_defense": 4,
+			"attack_range": 60,
+			"attack_speed": 0.9,
+			"attack_arc_degrees": 60,
+			"crit_chance": 0.1,
+			"crit_multiplier": 1.75,
+			"pickup_radius": 48,
+			"skills": ["skill_heavy_strike"],
+			"unlock_condition": { "type": "level_completed", "level_id": "level_cave_01" }
+		}
+	]
+}

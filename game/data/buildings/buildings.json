@@ -1,0 +1,17 @@
+{
+	"content_version": 1,
+	"items": [
+		{
+			"id": "building_camp",
+			"status": "draft",
+			"name": "Camp",
+			"type": "camp",
+			"levels": [
+				{ "level": 1, "upgrade_cost": [], "requirements": [], "effects": [] },
+				{ "level": 2, "upgrade_cost": [{ "item_id": "item_gold_coin", "quantity": 200 }], "requirements": [], "effects": [{ "type": "stat", "stat": "max_health", "mode": "add", "value": 10 }] },
+				{ "level": 3, "upgrade_cost": [{ "item_id": "item_gold_coin", "quantity": 500 }], "requirements": [], "effects": [{ "type": "stat", "stat": "max_health", "mode": "add", "value": 20 }] },
+				{ "level": 4, "upgrade_cost": [{ "item_id": "item_gold_coin", "quantity": 1200 }], "requirements": [], "effects": [{ "type": "stat", "stat": "max_health", "mode": "add", "value": 35 }] }
+			]
+		}
+	]
+}

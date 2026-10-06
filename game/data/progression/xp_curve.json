@@ -1,0 +1,24 @@
+{
+	"content_version": 1,
+	"items": [
+		{ "id": "xp_level_2", "status": "published", "level": 2, "required_xp": 12 },
+		{ "id": "xp_level_3", "status": "published", "level": 3, "required_xp": 30 },
+		{ "id": "xp_level_4", "status": "published", "level": 4, "required_xp": 55 },
+		{ "id": "xp_level_5", "status": "published", "level": 5, "required_xp": 90 },
+		{ "id": "xp_level_6", "status": "published", "level": 6, "required_xp": 135 },
+		{ "id": "xp_level_7", "status": "published", "level": 7, "required_xp": 190 },
+		{ "id": "xp_level_8", "status": "published", "level": 8, "required_xp": 260 },
+		{ "id": "xp_level_9", "status": "published", "level": 9, "required_xp": 345 },
+		{ "id": "xp_level_10", "status": "published", "level": 10, "required_xp": 445 },
+		{ "id": "xp_level_11", "status": "published", "level": 11, "required_xp": 560 },
+		{ "id": "xp_level_12", "status": "published", "level": 12, "required_xp": 700 },
+		{ "id": "xp_level_13", "status": "published", "level": 13, "required_xp": 860 },
+		{ "id": "xp_level_14", "status": "published", "level": 14, "required_xp": 1040 },
+		{ "id": "xp_level_15", "status": "published", "level": 15, "required_xp": 1250 },
+		{ "id": "xp_level_16", "status": "published", "level": 16, "required_xp": 1490 },
+		{ "id": "xp_level_17", "status": "published", "level": 17, "required_xp": 1760 },
+		{ "id": "xp_level_18", "status": "published", "level": 18, "required_xp": 2060 },
+		{ "id": "xp_level_19", "status": "published", "level": 19, "required_xp": 2400 },
+		{ "id": "xp_level_20", "status": "published", "level": 20, "required_xp": 2780 }
+	]
+}

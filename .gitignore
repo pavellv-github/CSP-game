@@ -1,0 +1,23 @@
+# Godot
+game/.godot/
+game/android/
+*.translation
+export_credentials.cfg
+
+# Build output
+build/
+
+# Signing
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+
+# Local env
+.env
+.env.*
+
+# OS / IDE
+.DS_Store
+.idea/workspace.xml
+.idea/shelf/

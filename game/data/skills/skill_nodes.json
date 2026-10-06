@@ -1,0 +1,9 @@
+{
+	"content_version": 1,
+	"items": [
+		{ "id": "node_power", "status": "draft", "branch": "power", "upgrade_id": "upgrade_meta_damage", "prerequisites": [] },
+		{ "id": "node_heavy_strike", "status": "draft", "branch": "power", "upgrade_id": "upgrade_heavy_strike_power", "prerequisites": ["node_power"] },
+		{ "id": "node_berserker", "status": "draft", "branch": "power", "upgrade_id": "upgrade_attack_speed", "prerequisites": ["node_heavy_strike"] },
+		{ "id": "node_cleave", "status": "draft", "branch": "power", "upgrade_id": "upgrade_attack_range", "prerequisites": ["node_heavy_strike"] }
+	]
+}

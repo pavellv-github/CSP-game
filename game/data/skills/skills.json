@@ -1,0 +1,16 @@
+{
+	"content_version": 1,
+	"items": [
+		{
+			"id": "skill_heavy_strike",
+			"status": "published",
+			"name": "Heavy Strike",
+			"description": "Slams the ground, damaging every enemy around.",
+			"effect": "aoe_damage",
+			"cooldown": 6.0,
+			"damage_multiplier": 2.5,
+			"radius": 56,
+			"vfx": "res://assets/sprites/vfx/nova.png"
+		}
+	]
+}

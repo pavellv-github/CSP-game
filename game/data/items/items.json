@@ -1,0 +1,38 @@
+{
+	"content_version": 1,
+	"items": [
+		{
+			"id": "item_gold_coin",
+			"status": "published",
+			"name": "Gold",
+			"type": "currency",
+			"rarity": "common",
+			"stackable": true,
+			"max_stack": 999999,
+			"icon": "res://assets/sprites/items/gold_coin.png",
+			"effects": []
+		},
+		{
+			"id": "item_health_potion",
+			"status": "published",
+			"name": "Health Potion",
+			"type": "consumable",
+			"rarity": "common",
+			"stackable": true,
+			"max_stack": 20,
+			"icon": "res://assets/sprites/items/health_potion.png",
+			"effects": [{ "type": "heal", "value": 60 }]
+		},
+		{
+			"id": "item_iron_sword",
+			"status": "published",
+			"name": "Iron Sword",
+			"type": "weapon",
+			"rarity": "uncommon",
+			"stackable": false,
+			"max_stack": 1,
+			"icon": "res://assets/sprites/items/iron_sword.png",
+			"effects": [{ "type": "stat", "stat": "damage", "mode": "add", "value": 6 }]
+		}
+	]
+}
