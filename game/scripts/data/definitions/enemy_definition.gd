@@ -4,6 +4,8 @@ extends ContentDefinition
 var name: String = ""
 var sprite: String = ""
 var frames: int = 1
+## Animation layout of `sprite` (frame_size + animations from data).
+var sheet: SpriteSheet
 var health: int = 10
 var damage: int = 5
 var defense: int = 0
@@ -27,6 +29,7 @@ func _parse(d: Dictionary) -> void:
 	name = str(d.get("name", id))
 	sprite = str(d.get("sprite", ""))
 	frames = int(d.get("frames", 1))
+	sheet = SpriteSheet.from_data(d)
 	health = int(d.get("health", health))
 	damage = int(d.get("damage", damage))
 	defense = int(d.get("defense", defense))
@@ -47,6 +50,7 @@ func validate() -> Array[String]:
 	var errors := super.validate()
 	if health <= 0:
 		errors.append("%s: health must be > 0" % id)
+	errors.append_array(sheet.validate(id))
 	if ai_type == "ranged" and projectile.is_empty():
 		errors.append("%s: ranged AI requires 'projectile'" % id)
 	return errors

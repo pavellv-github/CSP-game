@@ -22,6 +22,7 @@ func physics_step(delta: float) -> void:
 	if _burst_left <= 0.0 and not enemy.definition.projectile.is_empty():
 		_burst_left = float(params.get("burst_cooldown", 5.0))
 		var count := int(params.get("burst_count", 8))
+		enemy.telegraph_attack()
 		var offset := randf() * TAU
 		for i in count:
 			enemy.projectile_requested.emit(enemy.global_position, Vector2.from_angle(offset + TAU * i / count),

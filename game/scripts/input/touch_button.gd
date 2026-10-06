@@ -7,6 +7,8 @@ signal pressed
 
 @export var label: String = ""
 @export var color: Color = Color(1, 1, 1)
+## Optional glyph drawn instead of the text label.
+@export var icon: Texture2D
 
 var cooldown_ratio: float = 0.0
 var _touch_index: int = -1
@@ -50,7 +52,9 @@ func _draw() -> void:
 			var angle := -PI * 0.5 + TAU * cooldown_ratio * float(i) / steps
 			points.append(center + Vector2.from_angle(angle) * r)
 		draw_colored_polygon(points, Color(0, 0, 0, 0.5))
-	if not label.is_empty():
+	if icon != null:
+		draw_texture(icon, (center - icon.get_size() * 0.5).floor())
+	elif not label.is_empty():
 		var font := get_theme_default_font()
 		var font_size := 8
 		var text_size := font.get_string_size(label, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)

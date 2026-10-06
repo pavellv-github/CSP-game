@@ -1,8 +1,9 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/player/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/gameplay/components/health_component.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/gameplay/components/stats_component.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/gameplay/components/sprite_animator.gd" id="anim"]
 [ext_resource type="Script" path="res://scripts/gameplay/components/movement_component.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/gameplay/components/combat_component.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/gameplay/components/experience_component.gd" id="6"]
@@ -19,8 +20,9 @@ collision_mask = 1
 motion_mode = 1
 script = ExtResource("1")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
 offset = Vector2(0, -6)
+script = ExtResource("anim")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")

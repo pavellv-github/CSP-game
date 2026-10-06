@@ -3,6 +3,10 @@ extends Control
 ## Displays game state received through EventBus; touch controls feed the InputRouter.
 ## Contains no game logic.
 
+const HUD_ICON_DIR := "res://assets/ui/hud_icons/"
+## Touch button caption -> icon file name in HUD_ICON_DIR (text is shown when the file is missing).
+const HUD_ICONS := {"ATK": "attack", "SKILL": "skill", "DASH": "dash", "BAG": "bag", "USE": "use"}
+
 var router: InputRouter
 
 var _health_bar: ProgressBar
@@ -84,6 +88,11 @@ func _build_top_bar() -> void:
 	row.add_child(bars)
 	var pause := UiKit.button("II", func() -> void: router.press(InputSetup.PAUSE), 24)
 	pause.custom_minimum_size.x = 28
+	var pause_icon := _hud_icon("pause")
+	if pause_icon != null:
+		pause.text = ""
+		pause.icon = pause_icon
+		pause.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	row.add_child(pause)
 	column.add_child(row)
 
@@ -134,21 +143,22 @@ func _build_controls() -> void:
 	joystick.anchor_bottom = 1.0
 	controls.add_child(joystick)
 
-	var attack := _action_button(controls, "ATK", 52, Vector2(-62, -78), Color(1.0, 0.55, 0.4))
+	var attack := _action_button(controls, "ATK", 52, Vector2(-62, -78), UiKit.DANGER)
 	attack.pressed.connect(func() -> void: router.press(InputSetup.ATTACK))
-	_skill_button = _action_button(controls, "SKILL", 42, Vector2(-120, -58), Color(1.0, 0.85, 0.4))
+	_skill_button = _action_button(controls, "SKILL", 42, Vector2(-120, -58), UiKit.ACCENT)
 	_skill_button.pressed.connect(func() -> void: router.press(InputSetup.SKILL))
-	_dash_button = _action_button(controls, "DASH", 38, Vector2(-54, -128), Color(0.5, 0.8, 1.0))
+	_dash_button = _action_button(controls, "DASH", 38, Vector2(-54, -128), UiKit.XP)
 	_dash_button.pressed.connect(func() -> void: router.press(InputSetup.DASH))
-	var bag := _action_button(controls, "BAG", 30, Vector2(-110, -112), Color(0.8, 0.8, 0.9))
+	var bag := _action_button(controls, "BAG", 30, Vector2(-110, -112), UiKit.TEXT_DIM)
 	bag.pressed.connect(func() -> void: router.press(InputSetup.INVENTORY))
-	var interact := _action_button(controls, "USE", 30, Vector2(-150, -100), Color(0.7, 1.0, 0.7))
+	var interact := _action_button(controls, "USE", 30, Vector2(-150, -100), Color("#7a9a5a"))
 	interact.pressed.connect(func() -> void: router.press(InputSetup.INTERACT))
 
 
 func _action_button(parent: Control, text: String, diameter: float, offset_from_bottom_right: Vector2, tint: Color) -> TouchButton:
 	var button := TouchButton.new()
 	button.label = text
+	button.icon = _hud_icon(HUD_ICONS.get(text, ""))
 	button.color = tint
 	button.anchor_left = 1.0
 	button.anchor_right = 1.0
@@ -160,6 +170,11 @@ func _action_button(parent: Control, text: String, diameter: float, offset_from_
 	button.offset_bottom = offset_from_bottom_right.y + diameter * 0.5
 	parent.add_child(button)
 	return button
+
+
+func _hud_icon(icon_name: String) -> Texture2D:
+	var path := HUD_ICON_DIR + icon_name + ".png"
+	return load(path) if not icon_name.is_empty() and ResourceLoader.exists(path) else null
 
 
 func _on_health_changed(current: int, maximum: int) -> void:

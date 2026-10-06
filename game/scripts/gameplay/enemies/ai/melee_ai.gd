@@ -27,5 +27,6 @@ func physics_step(delta: float) -> void:
 		if enemy.can_attack():
 			_wind_up_left = WIND_UP_TIME
 			enemy.sprite.modulate = Color(1.0, 0.6, 0.6)
+			enemy.telegraph_attack()
 	else:
 		move_towards_target()

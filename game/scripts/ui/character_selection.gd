@@ -28,15 +28,27 @@ func _build() -> void:
 
 func _character_card(character: CharacterDefinition, selected: bool) -> Control:
 	var row := UiKit.hbox(8)
-	row.add_child(UiKit.sprite_icon(character.sprite, character.frames, 40))
-	var info := UiKit.vbox(2)
+	if not character.portrait.is_empty():
+		row.add_child(UiKit.illustration(character.portrait))
+	else:
+		row.add_child(UiKit.sprite_icon(character.sheet, 40))
+	var info := UiKit.vbox(4)
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.add_child(UiKit.label(character.name + ("  (selected)" if selected else ""), 12, UiKit.ACCENT if selected else UiKit.TEXT))
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	var header := UiKit.hbox(4)
+	if not character.class_icon.is_empty():
+		header.add_child(UiKit.illustration(character.class_icon))
+	var name_label := UiKit.label(character.name, 12, UiKit.ACCENT if selected else UiKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT, false)
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	header.add_child(name_label)
+	info.add_child(header)
+	if selected:
+		info.add_child(UiKit.label("Selected", 8, UiKit.ACCENT))
 	info.add_child(UiKit.label(character.description, 8, UiKit.TEXT_DIM))
 	var stats := StatsComponent.new()
 	stats.setup(character.base_stats())
 	UpgradeService.apply_meta_upgrades(stats, Profile.get_meta_upgrade_levels())
-	info.add_child(UiKit.label("HP %d  DMG %d  DEF %d  SPD %d" % [
+	info.add_child(UiKit.label("HP %d  DMG %d\nDEF %d  SPD %d" % [
 		stats.get_int(Stats.MAX_HEALTH), stats.get_int(Stats.DAMAGE), stats.get_int(Stats.DEFENSE), stats.get_int(Stats.SPEED)], 8))
 	stats.free()
 	row.add_child(info)

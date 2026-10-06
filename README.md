@@ -25,7 +25,7 @@ game/                      Godot-проект (project.godot)
   export_presets.cfg       Android (arm64) и iOS (Xcode-проект, iOS 16+)
 backend/supabase/          схема БД (контент + данные игрока, RLS) — задел под фазы 5–6
 tools/build.sh             тесты и сборки
-tools/gen_placeholder_sprites.py  генератор плейсхолдер-спрайтов
+tools/art/generate_sprites.py     генератор игрового пиксель-арта (персонажи, враги, тайлы, VFX, иконки)
 .github/workflows/build.yml       CI: тесты → Android APK → iOS Xcode-проект
 ```
 
@@ -54,6 +54,12 @@ IOS_TEAM_ID=XXXXXXXXXX tools/build.sh ios   # build/ios/PixelFantasySurvival.xco
 ```
 
 CI (`.github/workflows/build.yml`): на каждый push/PR — тесты и debug APK (артефакт `android-apk`); release APK — если заданы секреты `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_ALIAS`, `ANDROID_KEYSTORE_PASSWORD`; iOS Xcode-проект — на тегах `v*` или вручную, при наличии секрета `IOS_TEAM_ID`.
+
+## Графика
+
+- Референс стиля: `docs/art/reference/heroes_keyart.png`; ТЗ на графику для художника: `docs/art/ART_BRIEF.md`.
+- Палитра UI взята из референса (`game/scripts/ui/ui_kit.gd`, `docs/art/palette.json`).
+- Баннер меню, портреты и эмблемы классов нарезаются из референса: `godot --headless --script tools/art/import_keyart.gd` (координаты — `tools/art/keyart_regions.json`).
 
 ## Агенты Claude Code
 
@@ -93,7 +99,7 @@ GODOT=/path/to/Godot tools/claude/setup.sh --all           # + Supabase, Firebas
 
 ## Что не входит в эту сборку / требует решения
 
-- **Арт и звук** — плейсхолдеры: спрайты сгенерированы `tools/gen_placeholder_sprites.py` (замена файлов 1:1 по тем же путям), звуков нет (`AudioManager` молча пропускает отсутствующие файлы).
+- **Арт и звук** — игровой арт сгенерирован кодом по `docs/art/ART_BRIEF.md` (`python3 tools/art/generate_sprites.py`, подробности и ограничения — `docs/art/GENERATED_ART.md`); это рабочая версия, которую стоит доработать художнику. Спрайт мага (draft) остаётся плейсхолдером. Звуков нет (`AudioManager` молча пропускает отсутствующие файлы).
 - **Firebase (Analytics, Crashlytics, Remote Config)** — код-мосты готовы и ждут нативные плагины Godot для Android/iOS (singleton'ы `FirebaseAnalytics`, `FirebaseCrashlytics`). Подключение плагинов, `google-services.json` / `GoogleService-Info.plist` — отдельная задача; без них игра работает, события пишутся в debug-провайдер.
 - **Supabase** — не подключён (по ТЗ backend не обязателен для MVP); SQL-схема не прогонялась на реальном инстансе.
 - **Идентификатор приложения** `com.csp.pixelfantasysurvival` — временный, заменить в `export_presets.cfg`.

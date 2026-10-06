@@ -61,3 +61,21 @@ func test_remote_config_overrides_defaults() -> void:
 	assert_almost(config.get_float("balance.xp_multiplier"), 2.0)
 	assert_false(config.is_feature_enabled("x"))
 	assert_eq(config.get_value("missing.key", 7), 7)
+
+
+func test_sprite_sheet_rows_and_legacy() -> void:
+	var sheet := SpriteSheet.from_data({"sprite": "x.png", "frame_size": [32, 32], "animations": {
+		"idle": {"row": 0, "frames": 4, "fps": 6}, "attack": {"row": 2, "frames": 5, "fps": 12, "hit_frame": 2}}})
+	assert_eq(sheet.frame_size, Vector2i(32, 32))
+	assert_eq(int(sheet.animations["attack"]["row"]), 2)
+	assert_eq(int(sheet.animations["attack"]["hit_frame"]), 2)
+	var legacy := SpriteSheet.from_data({"sprite": "y.png", "frames": 2})
+	assert_true(legacy.has_animation("walk") and legacy.has_animation("idle"))
+	assert_eq(int(legacy.animations["walk"]["frames"]), 2)
+
+
+func test_all_sprite_sheets_fit_their_textures() -> void:
+	for definition in Content.characters.get_all():
+		assert_eq((definition as CharacterDefinition).sheet.validate(definition.id), [] as Array[String])
+	for definition in Content.enemies.get_all():
+		assert_eq((definition as EnemyDefinition).sheet.validate(definition.id), [] as Array[String])

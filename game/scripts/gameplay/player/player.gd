@@ -10,7 +10,7 @@ const HIT_INVULNERABILITY := 0.35
 
 var definition: CharacterDefinition
 
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var sprite: SpriteAnimator = $Sprite
 @onready var camera: Camera2D = $Camera2D
 @onready var movement: MovementComponent = $MovementComponent
 @onready var combat: CombatComponent = $CombatComponent
@@ -19,7 +19,6 @@ var definition: CharacterDefinition
 @onready var skills: SkillComponent = $SkillComponent
 @onready var controller: PlayerController = $PlayerController
 
-var _anim_time := 0.0
 var _flash_tween: Tween
 
 
@@ -49,14 +48,18 @@ func setup(character: CharacterDefinition, arena_bounds: Rect2) -> void:
 	combat.setup(self, stats, character.attack_arc_degrees)
 	combat.damage_multiplier = config.get_float("balance.player_damage_multiplier", 1.0)
 	combat.auto_attack = bool(Profile.get_setting("auto_attack", true)) and config.is_feature_enabled("auto_attack")
-	combat.attacked.connect(func(direction: Vector2, attack_range: float) -> void: attack_performed.emit(direction, attack_range))
+	combat.attacked.connect(func(direction: Vector2, attack_range: float) -> void:
+		sprite.play_once(&"attack")
+		attack_performed.emit(direction, attack_range))
 	skills.setup(self, stats, character.skills)
 	skills.damage_multiplier = combat.damage_multiplier
-	skills.skill_activated.connect(func(skill: SkillDefinition, origin: Vector2, radius: float) -> void: skill_performed.emit(skill, origin, radius))
+	skills.skill_activated.connect(func(skill: SkillDefinition, origin: Vector2, radius: float) -> void:
+		sprite.play_once(&"cast")
+		skill_performed.emit(skill, origin, radius))
 	experience.setup(Content.xp_curve, config.get_float("balance.xp_multiplier", 1.0))
 	controller.setup(self)
 
-	_apply_sprite(character.sprite, character.frames)
+	sprite.setup(character.sheet)
 	EventBus.player_health_changed.emit(health.current, health.max_health)
 
 
@@ -73,22 +76,11 @@ func _physics_process(delta: float) -> void:
 	_animate(delta)
 
 
-func _animate(delta: float) -> void:
+func _animate(_delta: float) -> void:
 	if absf(movement.facing.x) > 0.1:
 		sprite.flip_h = movement.facing.x < 0.0
-	if velocity.length() > 1.0 and sprite.hframes > 1:
-		_anim_time += delta
-		sprite.frame = int(_anim_time * 8.0) % sprite.hframes
-	else:
-		sprite.frame = 0
+	sprite.play_loop(&"walk" if velocity.length() > 1.0 else &"idle")
 	sprite.modulate.a = 0.5 if movement.is_dashing() else 1.0
-
-
-func _apply_sprite(path: String, frames: int) -> void:
-	if ResourceLoader.exists(path):
-		sprite.texture = load(path)
-		sprite.hframes = maxi(1, frames)
-		sprite.offset.y = -sprite.texture.get_height() * 0.5 + 2.0
 
 
 func _on_stats_changed() -> void:
@@ -99,6 +91,7 @@ func _on_stats_changed() -> void:
 
 func _on_damaged(_amount: int, _source_id: String) -> void:
 	AudioManager.play_sfx("player_hurt")
+	sprite.play_once(&"hurt")
 	if bool(Profile.get_setting("vibration", true)):
 		Input.vibrate_handheld(40)
 	if _flash_tween != null:
@@ -110,4 +103,5 @@ func _on_damaged(_amount: int, _source_id: String) -> void:
 
 func _on_died(source_id: String) -> void:
 	velocity = Vector2.ZERO
+	sprite.play_death()
 	EventBus.player_died.emit(source_id)

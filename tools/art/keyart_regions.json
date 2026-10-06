@@ -1,0 +1,16 @@
+{
+	"source": "docs/art/reference/heroes_keyart.png",
+	"output_root": "game/assets/ui",
+	"palette_output": "docs/art/palette.json",
+	"palette_size": 16,
+	"banner": { "rect": [0, 0, 943, 470], "width": 360, "output": "menu/keyart_banner.png" },
+	"portrait_height": 104,
+	"icon_size": 24,
+	"heroes": [
+		{ "id": "warrior", "portrait": [28, 180, 180, 312], "icon": [98, 498, 48, 48] },
+		{ "id": "mage", "portrait": [205, 182, 190, 310], "icon": [273, 498, 48, 48] },
+		{ "id": "healer", "portrait": [382, 190, 150, 302], "icon": [446, 498, 48, 48] },
+		{ "id": "archer", "portrait": [560, 198, 185, 294], "icon": [619, 498, 48, 48] },
+		{ "id": "hunter", "portrait": [752, 212, 160, 280], "icon": [802, 498, 48, 48] }
+	]
+}

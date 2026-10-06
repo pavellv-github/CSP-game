@@ -10,7 +10,7 @@ config/description="Pixel art fantasy survival / action RPG (MVP)"
 config/version="0.1.0"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
-boot_splash/bg_color=Color(0.0784314, 0.0666667, 0.0980392, 1)
+boot_splash/bg_color=Color(0.0705882, 0.0627451, 0.0745098, 1)
 boot_splash/show_image=false
 config/icon="res://icon.svg"
 
@@ -70,4 +70,4 @@ textures/canvas_textures/default_texture_filter=0
 2d/snap/snap_2d_transforms_to_pixel=true
 2d/snap/snap_2d_vertices_to_pixel=true
 textures/vram_compression/import_etc2_astc=true
-environment/defaults/default_clear_color=Color(0.0784314, 0.0666667, 0.0980392, 1)
+environment/defaults/default_clear_color=Color(0.0705882, 0.0627451, 0.0745098, 1)

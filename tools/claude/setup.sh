@@ -47,17 +47,28 @@ for arg in "$@"; do
   esac
 done
 
+checksum() { shasum -a 256 "$1" | cut -d' ' -f1; }
+
+# Checksums of the versions this script installed: a local file that still matches its
+# recorded checksum was not edited and can be updated safely.
 install_agents() {
   mkdir -p "$TARGET_AGENTS"
+  local manifest="$TARGET_AGENTS/.installed"
+  touch "$manifest"
   for source in "$SOURCE_AGENTS"/*.md; do
-    local name target
+    local name target installed
     name="$(basename "$source")"
     target="$TARGET_AGENTS/$name"
-    if [[ -f "$target" && $FORCE -eq 0 ]] && ! cmp -s "$source" "$target"; then
+    installed="$(grep -E "^$name " "$manifest" | cut -d' ' -f2 || true)"
+    if [[ -f "$target" && $FORCE -eq 0 ]] && ! cmp -s "$source" "$target" \
+        && [[ "$(checksum "$target")" != "$installed" ]]; then
       echo "  skip   $name (edited locally; use --force to overwrite)"
       continue
     fi
     cp "$source" "$target"
+    grep -vE "^$name " "$manifest" > "$manifest.tmp" || true
+    echo "$name $(checksum "$target")" >> "$manifest.tmp"
+    mv "$manifest.tmp" "$manifest"
     echo "  agent  $name"
   done
 }

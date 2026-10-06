@@ -5,6 +5,11 @@ var name: String = ""
 var description: String = ""
 var sprite: String = ""
 var frames: int = 1
+## Animation layout of `sprite` (frame_size + animations from data).
+var sheet: SpriteSheet
+## Menu art: full-height portrait and round class emblem (optional).
+var portrait: String = ""
+var class_icon: String = ""
 var base_health: int = 100
 var base_damage: int = 10
 var base_speed: float = 80.0
@@ -24,6 +29,9 @@ func _parse(d: Dictionary) -> void:
 	description = str(d.get("description", ""))
 	sprite = str(d.get("sprite", ""))
 	frames = int(d.get("frames", 1))
+	sheet = SpriteSheet.from_data(d)
+	portrait = str(d.get("portrait", ""))
+	class_icon = str(d.get("class_icon", ""))
 	base_health = int(d.get("base_health", base_health))
 	base_damage = int(d.get("base_damage", base_damage))
 	base_speed = float(d.get("base_speed", base_speed))
@@ -59,4 +67,8 @@ func validate() -> Array[String]:
 		errors.append("%s: base_health must be > 0" % id)
 	if attack_speed <= 0.0:
 		errors.append("%s: attack_speed must be > 0" % id)
+	errors.append_array(sheet.validate(id))
+	for path in [portrait, class_icon]:
+		if not path.is_empty() and not ResourceLoader.exists(path):
+			errors.append("%s: missing asset '%s'" % [id, path])
 	return errors

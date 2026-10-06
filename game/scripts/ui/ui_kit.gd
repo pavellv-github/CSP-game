@@ -3,15 +3,21 @@ extends RefCounted
 ## Shared theme and small widget factories. UI scripts only build layout and forward
 ## user actions to game systems; they contain no game rules.
 
-const BG := Color(0.0784, 0.0667, 0.098)
-const PANEL := Color(0.14, 0.12, 0.18, 0.96)
-const PANEL_BORDER := Color(0.42, 0.36, 0.5)
-const ACCENT := Color(0.95, 0.76, 0.3)
-const TEXT := Color(0.94, 0.92, 0.96)
-const TEXT_DIM := Color(0.65, 0.62, 0.72)
-const DANGER := Color(0.85, 0.3, 0.35)
-const HEALTH := Color(0.85, 0.27, 0.32)
-const XP := Color(0.3, 0.7, 0.99)
+## Palette taken from the key art (docs/art/reference/heroes_keyart.png, docs/art/ART_BRIEF.md):
+## near-black warm plates with bronze/gold frames, parchment text, forest greens and lake blues.
+const BG := Color("#121013")
+const PANEL := Color("#1b1714f5")
+const PANEL_BORDER := Color("#7a5a34")
+const ACCENT := Color("#d9b97a")
+const TEXT := Color("#eee5d3")
+const TEXT_DIM := Color("#a3957f")
+const DANGER := Color("#b8453a")
+const HEALTH := Color("#b8453a")
+const XP := Color("#5588bb")
+const BUTTON := Color("#2a221b")
+const BUTTON_HOVER := Color("#3a2e22")
+const BUTTON_PRESSED := Color("#191410")
+const BUTTON_DISABLED := Color("#1a1715")
 
 
 static var _shared_theme: Theme
@@ -33,14 +39,14 @@ static func build_theme() -> Theme:
 	theme.set_color("font_hover_color", "Button", ACCENT)
 	theme.set_color("font_pressed_color", "Button", ACCENT)
 	theme.set_color("font_disabled_color", "Button", TEXT_DIM)
-	theme.set_stylebox("normal", "Button", _box(Color(0.22, 0.19, 0.28), PANEL_BORDER))
-	theme.set_stylebox("hover", "Button", _box(Color(0.28, 0.24, 0.36), ACCENT))
-	theme.set_stylebox("pressed", "Button", _box(Color(0.16, 0.14, 0.2), ACCENT))
-	theme.set_stylebox("disabled", "Button", _box(Color(0.16, 0.15, 0.19), Color(0.28, 0.26, 0.32)))
+	theme.set_stylebox("normal", "Button", _box(BUTTON, PANEL_BORDER))
+	theme.set_stylebox("hover", "Button", _box(BUTTON_HOVER, ACCENT))
+	theme.set_stylebox("pressed", "Button", _box(BUTTON_PRESSED, ACCENT))
+	theme.set_stylebox("disabled", "Button", _box(BUTTON_DISABLED, Color("#3a3128")))
 	theme.set_stylebox("focus", "Button", StyleBoxEmpty.new())
-	theme.set_stylebox("panel", "PanelContainer", _box(PANEL, PANEL_BORDER))
-	theme.set_stylebox("panel", "Panel", _box(PANEL, PANEL_BORDER))
-	var bar_bg := _box(Color(0.1, 0.08, 0.12), Color(0.05, 0.04, 0.06))
+	theme.set_stylebox("panel", "PanelContainer", _framed_box(PANEL, PANEL_BORDER))
+	theme.set_stylebox("panel", "Panel", _framed_box(PANEL, PANEL_BORDER))
+	var bar_bg := _box(Color("#0d0b0a"), Color("#3a2c1c"))
 	bar_bg.set_content_margin_all(0)
 	theme.set_stylebox("background", "ProgressBar", bar_bg)
 	var bar_fill := _box(HEALTH, Color(0, 0, 0, 0))
@@ -48,7 +54,16 @@ static func build_theme() -> Theme:
 	bar_fill.set_content_margin_all(0)
 	theme.set_stylebox("fill", "ProgressBar", bar_fill)
 	theme.set_color("font_color", "CheckButton", TEXT)
+	theme.set_color("font_hover_color", "CheckButton", ACCENT)
 	return theme
+
+
+## Plate with a thin bronze frame and a dark outer rim, like the class plates in the key art.
+static func _framed_box(fill: Color, border: Color) -> StyleBoxFlat:
+	var box := _box(fill, border)
+	box.shadow_color = Color("#00000099")
+	box.shadow_size = 2
+	return box
 
 
 static func _box(fill: Color, border: Color) -> StyleBoxFlat:
@@ -131,18 +146,32 @@ static func icon(path: String, size: float = 16.0) -> TextureRect:
 	return node
 
 
-## Sprite sheet first frame as an icon.
-static func sprite_icon(path: String, frames: int, size: float = 32.0) -> TextureRect:
+## First idle frame of a sprite sheet as an icon.
+static func sprite_icon(sheet: SpriteSheet, size: float = 32.0) -> TextureRect:
 	var node := TextureRect.new()
-	if ResourceLoader.exists(path):
+	if ResourceLoader.exists(sheet.texture_path):
+		var texture: Texture2D = load(sheet.texture_path)
+		var frame_size := sheet.resolve_frame_size(texture)
+		var row := int(sheet.animations.get("idle", {"row": 0})["row"])
 		var atlas := AtlasTexture.new()
-		var texture: Texture2D = load(path)
 		atlas.atlas = texture
-		atlas.region = Rect2(0, 0, texture.get_width() / maxi(1, frames), texture.get_height())
+		atlas.region = Rect2(0, row * frame_size.y, frame_size.x, frame_size.y)
 		node.texture = atlas
 	node.custom_minimum_size = Vector2(size, size)
 	node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	node.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	return node
+
+
+## Menu illustration (portrait, banner) shown at its native pixel size.
+static func illustration(path: String, min_size: Vector2 = Vector2.ZERO) -> TextureRect:
+	var node := TextureRect.new()
+	if ResourceLoader.exists(path):
+		node.texture = load(path)
+	node.custom_minimum_size = min_size if min_size != Vector2.ZERO or node.texture == null else node.texture.get_size()
+	node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	node.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return node
 
 
