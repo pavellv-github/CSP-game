@@ -1,0 +1,36 @@
+<!doctype html><meta charset=utf-8><style>body{background:#fff;font:14px sans-serif}button{display:block;margin:6px;padding:10px 20px;font-size:16px}canvas{max-width:300px;border:1px solid #ccc}</style><body>
+<div id=s>loading</div>
+<script>
+// hero -> [sheet, ...extra sprites]; filled by make_copy_page.py
+const heroes = /*HEROES*/{};
+const load = n => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = n; });
+const scaleOf = im => im.width <= 8 ? 8 : (im.width <= 64 ? 3 : 2);
+window.addEventListener('unhandledrejection', e => { document.getElementById('s').textContent = 'ERR ' + e.reason; });
+(async () => {
+	for (const [hero, files] of Object.entries(heroes)) {
+		const [sheet, ...extra] = await Promise.all(files.map(load));
+		const S = 3, pad = 24;
+		let exW = 0, exH = 0;
+		extra.forEach(im => { exW = Math.max(exW, im.width * scaleOf(im)); exH += im.height * scaleOf(im) + pad; });
+		const c = document.createElement('canvas');
+		c.width = sheet.width * S + pad * 3 + exW;
+		c.height = Math.max(sheet.height * S, exH) + pad * 2;
+		const g = c.getContext('2d');
+		g.imageSmoothingEnabled = false;
+		g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+		g.drawImage(sheet, pad, pad, sheet.width * S, sheet.height * S);
+		let y = pad;
+		extra.forEach(im => { const k = scaleOf(im); g.drawImage(im, sheet.width * S + pad * 2, y, im.width * k, im.height * k); y += im.height * k + pad; });
+		const b = document.createElement('button');
+		b.id = 'b_' + hero; b.textContent = 'copy ' + hero;
+		b.onclick = async () => {
+			document.getElementById('s').textContent = 'copying ' + hero;
+			const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+			await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+			document.getElementById('s').textContent = 'copied ' + hero;
+		};
+		document.body.append(b, c);
+	}
+	document.getElementById('s').textContent = 'ready';
+})();
+</script>
