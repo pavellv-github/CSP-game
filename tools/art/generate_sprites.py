@@ -344,57 +344,8 @@ def fall_frames(make, base_pose: dict, foot_y: int, pivot_x: float, angles: list
 
 
 # ======================================================================================
-# WARRIOR 32x32  (brown leather, rusty fur collar, steel sword, round dark shield)
+# Shared weapon: sword (heroes, sword icon)
 # ======================================================================================
-W_FOOT = 30  # bottom row of the boots
-
-HEAD = [
-    "...bcccb..",
-    "..bcddddc.",
-    ".bcddcccdb",
-    "bcdcbbiijb",
-    "bccbhijjji",
-    "bcbhijjoji",
-    "bbbhiijjjj",
-    ".bahiiiih.",
-    ".abefgffe.",
-    "..aeggfe..",
-    "...eeee...",
-]
-
-TORSO = [
-    "...........",
-    ".bcdddccba.",
-    "bcddcccrbba",
-    "bcdcccrcbba",
-    "bcccbrccbba",
-    "bccbrcccbba",
-    "abcrcccbbaa",
-    "aqrqqqsrqqa",
-    ".abbbbbbaa.",
-    ".abbcbbbaa.",
-]
-
-COLLAR = [
-    "..gggg.ggg...",
-    ".ggfgggfgggf.",
-    "gfgffgfffgffe",
-    "effefffefffe.",
-    ".eeeee.eeee..",
-]
-
-LEG = [
-    "abb",
-    "abb",
-    "abc",
-    "abb",
-    "kab",
-    "bccb",
-    "bcdcb",
-    "abbbbb",
-]
-
-
 def draw_sword(c: Canvas, hx: float, hy: float, ang: float, length: int = 10) -> None:
     t = math.radians(ang)
     dx, dy = math.cos(t), math.sin(t)
@@ -414,107 +365,6 @@ def draw_sword(c: Canvas, hx: float, hy: float, ang: float, length: int = 10) ->
         if c.get(round(sx), round(sy)) is None or i > 2:
             c.set(round(sx), round(sy), "n" if i < length - 1 else None)
     c.set(round(hx + dx * 4), round(hy + dy * 4), "W")
-
-
-def draw_shield(c: Canvas, cx: float, cy: float) -> None:
-    c.ellipse(cx, cy, 4.6, 5.6, "m")
-    c.ellipse(cx + 0.3, cy + 0.2, 3.6, 4.6, "k")
-    # rim highlight top-left
-    for (x, y) in ((-3, -4), (-2, -5), (-4, -2), (-4, -1), (-1, -5)):
-        c.set(cx + x, cy + y, "n")
-    c.set(cx - 2, cy - 4, "p")
-    # wood shading
-    for y in range(-3, 4):
-        c.set(cx + 2, cy + y, "a")
-    c.set(cx - 2, cy - 2, "a")
-    # emblem: pale tree / star
-    for (x, y, col) in ((0, -3, "z"), (0, -2, "W"), (-1, -1, "z"), (0, -1, "W"), (1, -1, "z"),
-                        (0, 0, "r"), (-2, 0, "z"), (2, 0, "y"), (0, 1, "W"), (-1, 2, "z"), (1, 2, "y"),
-                        (0, 2, "z")):
-        c.set(cx + x, cy + y, col)
-
-
-# warrior jerkin one step darker than the shared leather so it separates from the ochre ground
-WARRIOR_LEATHER = {"d": "c", "c": "b", "b": "a", "a": "k"}
-
-
-def warrior(bob: int = 0, back_dx: int = 0, back_lift: int = 0, front_dx: int = 0, front_lift: int = 0,
-            hand: tuple[float, float] = (10, 21), sword: float = 112, sword_front: bool = False,
-            shield_dx: int = 0, shield_dy: int = 0, lean: int = 0, crouch: int = 0,
-            blink: bool = False, fx: str | None = None) -> Canvas:
-    c = Canvas(32, 32)
-    ub = bob + crouch  # upper body offset
-    lx = lean
-    # back leg (darker)
-    dark = DARKER
-    c.stamp(LEG, 12 + back_dx, 23 - back_lift + max(0, crouch - 1), remap=dark)
-    # sword arm + sword behind body
-    sx, sy = 12 + lx, 15 + ub
-    hx, hy = hand[0] + lx, hand[1] + ub
-    if not sword_front:
-        draw_sword(c, hx, hy, sword)
-    c.line(sx, sy, hx, hy, "b")
-    c.line(sx + 1, sy, hx + 1 if hx >= sx else hx - 0, hy, "c")
-    c.set(hx, hy, "i")
-    # torso
-    c.stamp(TORSO, 10 + lx, 13 + ub, remap=WARRIOR_LEATHER)
-    # front leg
-    c.stamp(LEG, 16 + front_dx, 23 - front_lift + max(0, crouch - 1))
-    # collar and head
-    c.stamp(COLLAR, 9 + lx, 11 + ub)
-    head = list(HEAD)
-    if blink:
-        head[5] = "bcbiijjhj."
-    c.stamp(head, 11 + lx, 2 + ub)
-    # shield arm + shield (front)
-    draw_shield(c, 22 + lx + shield_dx, 18 + ub + shield_dy)
-    if sword_front:
-        draw_sword(c, hx, hy, sword)
-        c.set(hx, hy, "i")
-        c.set(hx - 1, hy, "c")
-    if fx == "slam":
-        for (x, y, col) in ((23, 30, "W"), (29, 30, "W"), (22, 28, "z"), (30, 28, "z"), (21, 26, "W"),
-                            (30, 25, "W"), (24, 27, "W"), (28, 27, "z")):
-            c.set(x, y, col)
-    return c
-
-
-def warrior_sheet() -> Canvas:
-    F = finish
-    idle = [F(warrior(bob=b, blink=(i == 3))) for i, b in enumerate((0, 0, 1, 1))]
-    walk = []
-    for f in range(6):
-        p = f / 6 * 2 * math.pi
-        s = math.sin(p)
-        fd = round(2.4 * s)
-        bd = -fd
-        fl = 1 if math.cos(p) > 0.5 else 0
-        bl = 1 if math.cos(p) < -0.5 else 0
-        bob = 0 if abs(s) > 0.6 else 1
-        walk.append(F(warrior(bob=bob, front_dx=fd, back_dx=bd, front_lift=fl, back_lift=bl,
-                              hand=(10 - fd // 2, 21), sword=112 + fd * 4)))
-    attack = [
-        F(warrior(hand=(10, 15), sword=200, lean=-1, back_dx=-1, front_dx=1)),
-        F(warrior(hand=(12, 11), sword=250, bob=-1, back_dx=-1, front_dx=1)),
-        F(warrior(hand=(21, 15), sword=5, sword_front=True, lean=1, shield_dx=-2, shield_dy=2,
-                  back_dx=-2, front_dx=2)),
-        F(warrior(hand=(21, 19), sword=55, sword_front=True, lean=1, shield_dx=-2, shield_dy=2,
-                  back_dx=-2, front_dx=2)),
-        F(warrior(hand=(13, 20), sword=100, back_dx=-1, front_dx=1)),
-    ]
-    hurt = [F(flash(warrior(lean=-1, shield_dx=-1, hand=(9, 20)))), F(warrior(lean=-1, hand=(9, 20)))]
-    pose = dict(hand=(9, 21), sword=90, lean=-1)
-    death = fall_frames(warrior, pose, W_FOOT, 15, [-35, -70, -90, -90], 32, 32,
-                        pre=[F(flash(warrior(lean=-1, hand=(9, 20)))), F(warrior(crouch=2, lean=-1, hand=(9, 22), sword=150))])
-    # settle: last frame lowered sword lying beside
-    cast = [
-        F(warrior(hand=(25, 13), sword=270, sword_front=True, shield_dx=-2)),
-        F(warrior(hand=(25, 12), sword=270, sword_front=True, bob=-1, shield_dx=-2, front_dx=1, back_dx=-1)),
-        F(warrior(hand=(26, 17), sword=90, sword_front=True, crouch=2, shield_dx=-4, back_dx=-2, front_dx=2)),
-        F(warrior(hand=(26, 17), sword=90, sword_front=True, crouch=2, shield_dx=-4, back_dx=-2, front_dx=2,
-                  fx="slam")),
-    ]
-    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
 
 
 # ======================================================================================
@@ -1030,42 +880,8 @@ def guardian_sheet() -> Canvas:
 
 
 # ======================================================================================
-# PLAYABLE HEROES 32x32: mage, healer, archer, hunter (exactly the warrior layout)
-# Same construction as the warrior: parts stamped from ASCII maps, posed by parameters,
-# drawn on the foot row H_FOOT (=W_FOOT), outlined by finish(), lifted 1 px by build_sheet.
+# Hero weapons: staff, crystal, cross, longbow, knife (used by the v3 hero rig below)
 # ======================================================================================
-H_FOOT = 30
-
-
-def robe(c: Canvas, cx: float, top: int, bottom: int, hw0: float, hw1: float, ramp: str,
-         lean: int = 0, sway: float = 0.0, power: float = 1.4) -> dict[int, tuple[int, int]]:
-    """Bell-shaped robe lit from the left. ramp = dark, mid, lit. Returns row extents."""
-    rows = {}
-    for y in range(top, bottom + 1):
-        t = (y - top) / max(1, bottom - top)
-        hw = hw0 + (hw1 - hw0) * t ** power
-        mid = cx + lean * (1 - t) + sway * t
-        x0, x1 = round(mid - hw), round(mid + hw)
-        for x in range(x0, x1 + 1):
-            u = (x - x0) / max(1, x1 - x0)
-            c.set(x, y, ramp[2] if u < 0.28 else (ramp[1] if u < 0.7 else ramp[0]))
-        rows[y] = (x0, x1)
-    return rows
-
-
-def sleeve(c: Canvas, sx: float, sy: float, hx: float, hy: float, dark: str, lit: str,
-           cuff: str | None = None, hand: str = "i") -> None:
-    """Two-pixel arm from shoulder to hand; cuff colour right before the hand."""
-    c.line(sx, sy, hx, hy, dark)
-    c.line(sx, sy - 1, hx, hy - 1, lit)
-    if cuff:
-        L = max(1.0, math.hypot(hx - sx, hy - sy))
-        ux, uy = (hx - sx) / L, (hy - sy) / L
-        c.set(round(hx - ux * 1.2), round(hy - uy * 1.2), cuff)
-        c.set(round(hx - ux * 1.2), round(hy - uy * 1.2) - 1, cuff)
-    c.set(hx, hy, hand)
-
-
 def staff_end(hx: float, hy: float, ang: float, up: float) -> tuple[int, int]:
     t = math.radians(ang)
     return round(hx + math.cos(t) * up), round(hy + math.sin(t) * up)
@@ -1115,248 +931,6 @@ def draw_cross(c: Canvas, x: int, y: int, glow: int = 0) -> None:
             c.set(x + dx, y + dy, col)
 
 
-def robe_feet(c: Canvas, cx: int, front_dx: int, back_dx: int, front_lift: int, back_lift: int,
-              col: str = "b", dark: str = "a") -> None:
-    """Boot toes peeking out under a robe hem (foot row H_FOOT)."""
-    bx = cx - 3 + back_dx
-    c.rect(bx, H_FOOT - back_lift, 3, 1, dark)
-    c.set(bx + 3, H_FOOT - back_lift, "k")
-    fx = cx + 1 + front_dx
-    c.rect(fx, H_FOOT - front_lift, 4, 1, col)
-    c.set(fx, H_FOOT - front_lift, dark)
-    c.set(fx + 3, H_FOOT - 1 - front_lift, col)
-
-
-# ---------------------------------------------------------------- MAGE
-# dark purple robe with gold trim, high collar, long dark hair and beard, staff with blue crystal
-MAGE_HEAD = [
-    "...kaaak..",
-    "..kaabaak.",
-    ".kabaaaabk",
-    "kaakkkiijk",
-    "kaakhijjji",
-    "kaahijjoji",
-    "kakhiijjjj",
-    "kakhiiiih.",
-    "kak.aaaaa.",
-    "kk..akaak.",
-    "......aa..",
-]
-MAGE_COLLAR = [
-    "LL.......",
-    "MLL......",
-    "MLLL.....",
-    "rMLLr....",
-]
-
-
-def mage(bob: int = 0, front_dx: int = 0, back_dx: int = 0, front_lift: int = 0, back_lift: int = 0,
-         hand: tuple[float, float] = (22, 19), staff: float = -90, staff_up: float = 15, staff_down: float = 10,
-         back_hand: tuple[float, float] | None = None, lean: int = 0, crouch: int = 0, sway: float = 0,
-         glow: int = 0, blink: bool = False, fx: str | None = None) -> Canvas:
-    c = Canvas(32, 32)
-    ub = bob + crouch
-    lx = lean
-    cx = 15
-    # back arm raised (cast) is behind the body
-    if back_hand:
-        sleeve(c, cx - 1 + lx, 16 + ub, back_hand[0] + lx, back_hand[1] + ub, "K", "L", cuff="r")
-    robe_feet(c, cx, front_dx, back_dx, front_lift, back_lift, col="b", dark="a")
-    rows = robe(c, cx + 0.5, 14 + ub, 29, 4.0, 7.6, "KLM", lean=lx, sway=sway)
-    # gold hem and front opening
-    for y in (28, 29):
-        x0, x1 = rows[y]
-        for x in range(x0, x1 + 1):
-            if y == 28:
-                c.set(x, y, "r" if x < x1 - 2 else "q")
-    for y in range(20 + ub, 28):
-        x0, x1 = rows[y]
-        ox = x0 + round((x1 - x0) * 0.66)
-        c.set(ox, y, "r" if y % 3 else "s")
-        c.set(ox + 1, y, "K")
-    # belt + pouch + crossed straps + blue amulet
-    yb = 20 + ub
-    x0, x1 = rows[yb]
-    for x in range(x0, x1 + 1):
-        c.set(x, yb, "b" if x < x1 - 1 else "a")
-    c.set(cx + 1 + lx, yb, "r")
-    c.rect(cx + 3 + lx, yb + 1, 2, 2, "c")
-    c.set(cx + 3 + lx, yb + 1, "d")
-    c.line(cx - 2 + lx, 15 + ub, cx + 2 + lx, 19 + ub, "a")
-    c.set(cx + lx, 16 + ub, "B")
-    c.set(cx + lx, 15 + ub, "r")
-    # high collar behind the head
-    c.stamp(MAGE_COLLAR, cx - 6 + lx, 10 + ub)
-    head = list(MAGE_HEAD)
-    if blink:
-        head[5] = "kaahiijjhi"
-    c.stamp(head, cx - 4 + lx, 4 + ub)
-    # staff + front sleeve (wide, purple, gold cuff)
-    hx, hy = hand[0] + lx, hand[1] + ub
-    tx, ty = draw_staff(c, hx, hy, staff, staff_up, staff_down)
-    sleeve(c, cx + 2 + lx, 16 + ub, hx, hy, "L", "M", cuff="r")
-    c.set(cx + 2 + lx, 17 + ub, "L")
-    c.set(cx + 3 + lx, 17 + ub, "L")
-    if back_hand:
-        c.set(back_hand[0] + lx, back_hand[1] + ub, "i")
-    draw_crystal(c, tx, ty, glow)
-    if fx == "spark":
-        for (dx, dy, col) in ((3, 0, "W"), (5, 0, "N"), (4, -2, "C"), (4, 2, "C")):
-            c.set(tx + dx, ty + dy, col)
-    if fx == "ground":
-        for (x, y, col) in ((6, 29, "N"), (9, 27, "C"), (25, 28, "N"), (28, 26, "C"), (12, 24, "W"), (27, 22, "W")):
-            c.set(x, y, col)
-    return c
-
-
-def mage_sheet() -> Canvas:
-    F = finish
-    idle = [F(mage(bob=b, blink=(i == 3), staff_up=15 - b)) for i, b in enumerate((0, 0, 1, 1))]
-    walk = []
-    for f in range(6):
-        p = f / 6 * 2 * math.pi
-        s = math.sin(p)
-        fd = round(1.6 * s)
-        bob = 0 if abs(s) > 0.6 else 1
-        walk.append(F(mage(bob=bob, front_dx=fd, back_dx=-fd, front_lift=0, back_lift=0, sway=-s * 0.8,
-                           hand=(22 + fd // 2, 19), staff=-90 + fd * 3, staff_up=15 - bob)))
-    attack = [
-        F(mage(hand=(19, 18), staff=-110, staff_up=13, staff_down=9, lean=-1, glow=1)),
-        F(mage(hand=(20, 17), staff=-70, staff_up=13, staff_down=8, glow=1, back_dx=-1, front_dx=1)),
-        F(mage(hand=(24, 17), staff=-40, staff_up=8, staff_down=8, lean=1, glow=2, fx="spark",
-               back_dx=-2, front_dx=2)),
-        F(mage(hand=(24, 17), staff=-45, staff_up=8, staff_down=8, lean=1, glow=1, back_dx=-2, front_dx=2)),
-        F(mage(hand=(22, 18), staff=-80, staff_up=14, staff_down=10, back_dx=-1, front_dx=1)),
-    ]
-    hurt = [F(flash(mage(lean=-1, hand=(21, 19), staff=-100))), F(mage(lean=-1, hand=(21, 19), staff=-100))]
-    pose = dict(hand=(21, 20), staff=-110, lean=-1)
-    death = fall_frames(mage, pose, H_FOOT, 15, [-35, -70, -90, -90], 32, 32,
-                        pre=[F(flash(mage(lean=-1, hand=(21, 19), staff=-100))),
-                             F(mage(crouch=2, lean=-1, hand=(21, 21), staff=-115, staff_down=5, staff_up=17))])
-    cast = [
-        F(mage(hand=(21, 16), staff=-90, staff_up=12, staff_down=10, back_hand=(19, 15), glow=1)),
-        F(mage(hand=(21, 13), staff=-90, staff_up=9, staff_down=11, back_hand=(19, 12), glow=2, bob=-1)),
-        F(mage(hand=(21, 13), staff=-90, staff_up=9, staff_down=11, back_hand=(19, 12), glow=2, bob=-1,
-               fx="ground")),
-        F(mage(hand=(21, 16), staff=-90, staff_up=12, staff_down=10, back_hand=(18, 16), glow=1)),
-    ]
-    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
-
-
-# ---------------------------------------------------------------- HEALER
-# white robe with a green front panel, green hooded mantle, dark curly hair, gold staff with green cross
-HEALER_HEAD = [
-    "..kaabak..",
-    ".kaabcaak.",
-    "kabbaabbak",
-    "kaabakijak",
-    "kbakhijjjk",
-    "kakhijjoj.",
-    "kakhiijjj.",
-    "kbakhiiih.",
-    "kak.hii...",
-    ".k........",
-]
-HEALER_MANTLE = [
-    "....uuuu....",
-    "..uvvwwvvu..",
-    ".uvwwwvvvuu.",
-    "tuvwvvvvvuut",
-    "tuvvvvvvuut.",
-    "tuuvvuuuut..",
-    "tuuuuttt....",
-    "tuuut.......",
-    "ttu.........",
-]
-
-
-def healer(bob: int = 0, front_dx: int = 0, back_dx: int = 0, front_lift: int = 0, back_lift: int = 0,
-           hand: tuple[float, float] = (21, 19), staff: float = -90, staff_up: float = 14, staff_down: float = 10,
-           back_hand: tuple[float, float] | None = None, lean: int = 0, crouch: int = 0, sway: float = 0,
-           glow: int = 0, blink: bool = False, fx: str | None = None) -> Canvas:
-    c = Canvas(32, 32)
-    ub = bob + crouch
-    lx = lean
-    cx = 15
-    robe_feet(c, cx, front_dx, back_dx, front_lift, back_lift, col="c", dark="b")
-    rows = robe(c, cx + 0.5, 15 + ub, 29, 3.6, 6.4, "yzW", lean=lx, sway=sway, power=1.2)
-    # green front panel with gold stitch, green hem
-    for y in range(21 + ub, 30):
-        x0, x1 = rows[y]
-        ox = x0 + round((x1 - x0) * 0.58)
-        c.set(ox, y, "v")
-        c.set(ox + 1, y, "u")
-        if y % 3 == 0:
-            c.set(ox, y, "r")
-    x0, x1 = rows[29]
-    for x in range(x0, x1 + 1):
-        c.set(x, 29, "v" if x < x1 - 2 else "u")
-    # gold belt + brown pouch
-    yb = 21 + ub
-    x0, x1 = rows[yb]
-    for x in range(x0, x1 + 1):
-        c.set(x, yb, "r" if x < x1 - 1 else "q")
-    c.rect(cx - 3 + lx, yb + 1, 2, 2, "c")
-    c.set(cx - 3 + lx, yb + 1, "d")
-    # green hooded mantle over the shoulders
-    c.stamp(HEALER_MANTLE, cx - 7 + lx, 12 + ub)
-    c.set(cx + 1 + lx, 15 + ub, "r")
-    if back_hand:  # raised back arm shows beside the head
-        sleeve(c, cx - 2 + lx, 15 + ub, back_hand[0] + lx, back_hand[1] + ub, "y", "z", cuff="v")
-    head = list(HEALER_HEAD)
-    if blink:
-        head[5] = "kabhiijji."
-    c.stamp(head, cx - 4 + lx, 5 + ub)
-    hx, hy = hand[0] + lx, hand[1] + ub
-    tx, ty = draw_staff(c, hx, hy, staff, staff_up, staff_down, shaft="q", hi="r")
-    sleeve(c, cx + 2 + lx, 16 + ub, hx, hy, "z", "W", cuff="v")
-    if back_hand:
-        c.set(back_hand[0] + lx, back_hand[1] + ub, "i")
-    draw_cross(c, tx, ty, glow)
-    if fx == "spark":
-        for (dx, dy, col) in ((3, 0, "W"), (5, 0, "s"), (4, -2, "x"), (4, 2, "x")):
-            c.set(tx + dx, ty + dy, col)
-    if fx == "light":
-        for (x, y, col) in ((5, 8, "s"), (8, 3, "W"), (26, 4, "s"), (11, 1, "s"), (27, 10, "W"), (4, 14, "W")):
-            c.set(x, y, col)
-    return c
-
-
-def healer_sheet() -> Canvas:
-    F = finish
-    idle = [F(healer(bob=b, blink=(i == 3), staff_up=14 - b)) for i, b in enumerate((0, 0, 1, 1))]
-    walk = []
-    for f in range(6):
-        p = f / 6 * 2 * math.pi
-        s = math.sin(p)
-        fd = round(1.6 * s)
-        bob = 0 if abs(s) > 0.6 else 1
-        walk.append(F(healer(bob=bob, front_dx=fd, back_dx=-fd, sway=-s * 0.8,
-                             hand=(21 + fd // 2, 19), staff=-90 + fd * 3, staff_up=14 - bob)))
-    attack = [
-        F(healer(hand=(19, 18), staff=-105, staff_up=12, lean=-1, glow=1)),
-        F(healer(hand=(21, 17), staff=-65, staff_up=12, staff_down=8, glow=1, back_dx=-1, front_dx=1)),
-        F(healer(hand=(24, 17), staff=-30, staff_up=7, staff_down=8, lean=1, glow=2, fx="spark",
-                 back_dx=-2, front_dx=2)),
-        F(healer(hand=(24, 17), staff=-35, staff_up=7, staff_down=8, lean=1, glow=1, back_dx=-2, front_dx=2)),
-        F(healer(hand=(21, 18), staff=-80, staff_up=13, back_dx=-1, front_dx=1)),
-    ]
-    hurt = [F(flash(healer(lean=-1, hand=(20, 19), staff=-100))), F(healer(lean=-1, hand=(20, 19), staff=-100))]
-    pose = dict(hand=(20, 20), staff=-110, lean=-1)
-    death = fall_frames(healer, pose, H_FOOT, 15, [-35, -70, -90, -90], 32, 32,
-                        pre=[F(flash(healer(lean=-1, hand=(20, 19), staff=-100))),
-                             F(healer(crouch=2, lean=-1, hand=(20, 21), staff=-115, staff_down=5, staff_up=16))])
-    cast = [
-        F(healer(hand=(21, 15), staff=-90, staff_up=11, back_hand=(9, 12), glow=1)),
-        F(healer(hand=(21, 11), staff=-90, staff_up=8, staff_down=12, back_hand=(8, 7), glow=2, bob=-1)),
-        F(healer(hand=(21, 11), staff=-90, staff_up=8, staff_down=12, back_hand=(8, 7), glow=2, bob=-1,
-                 fx="light")),
-        F(healer(hand=(21, 15), staff=-90, staff_up=11, back_hand=(9, 13), glow=1)),
-    ]
-    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
-
-
-# ---------------------------------------------------------------- shared bow (any tilt)
 def draw_longbow(c: Canvas, gx: float, gy: float, tilt: float, draw: float, arrow: bool,
                  half: float = 8.0, bend: float = 3.0) -> tuple[int, int]:
     """Recurve bow gripped at (gx, gy); tilt = aim angle in degrees (0 = right, negative = up).
@@ -1388,185 +962,6 @@ def draw_longbow(c: Canvas, gx: float, gy: float, tilt: float, draw: float, arro
     return nock
 
 
-# ---------------------------------------------------------------- ARCHER
-# short brown hair, green cowl and cloak, leather jerkin, quiver with pale fletchings, longbow
-ARCHER_HEAD = [
-    "...bccb...",
-    "..bccdccb.",
-    ".bcdccbccb",
-    "abccbaiijb",
-    "abahijjjji",
-    "abahijjoji",
-    ".bbhiijjjj",
-    "..bhiiiih.",
-    "...hhii...",
-]
-ARCHER_COWL = [
-    "..vwwv.vvu...",
-    ".vwwvvwvvvuu.",
-    "uvwvvvvvvvuut",
-    "tuuvuuuvuut..",
-]
-ARCHER_TORSO = [
-    "...........",
-    ".bcddcccba.",
-    "bcddccacbba",
-    "bcdccacbbba",
-    "bcccacccbba",
-    "bccacccbbba",
-    "abacccccbaa",
-    "aaarqaaaaaa",
-    ".tuuuuuuut.",
-    ".tuuvuuuut.",
-]
-ARCHER_LEG = [
-    "tuu",
-    "tuu",
-    "tuv",
-    "acc",
-    "bcd",
-    "bccb",
-    "bcdcb",
-    "abbbbb",
-]
-
-
-def archer_cloak(c: Canvas, lx: int, ub: int, flutter: int = 0) -> None:
-    """Green cloak hanging behind the back shoulder."""
-    for y in range(13 + ub, 27):
-        k = y - 13 - ub
-        x0 = round(10 + lx - k * 0.32 - (flutter if k > 6 else 0))
-        x1 = 14 + lx
-        for x in range(x0, x1 + 1):
-            c.set(x, y, "v" if x == x0 and k < 7 else ("u" if x < x0 + 3 else "t"))
-    # ragged hem
-    for i, x in enumerate(range(round(10 + lx - 13 * 0.32 - flutter), 15 + lx)):
-        if i % 4 != 3:
-            c.set(x, 27, "t")
-
-
-def archer(bob: int = 0, back_dx: int = 0, back_lift: int = 0, front_dx: int = 0, front_lift: int = 0,
-           grip: tuple[float, float] = (23, 19), tilt: float = 0, draw: float = 0, arrow: bool = False,
-           pull: tuple[float, float] | None = None, lean: int = 0, crouch: int = 0, flutter: int = 0,
-           blink: bool = False, fx: str | None = None) -> Canvas:
-    c = Canvas(32, 32)
-    ub = bob + crouch
-    lx = lean
-    # quiver on the back: tube + fletchings above the back shoulder
-    c.line(8 + lx, 19 + ub, 10 + lx, 10 + ub, "b")
-    c.line(9 + lx, 19 + ub, 11 + lx, 10 + ub, "a")
-    for (x, y, col) in ((8, 6, "W"), (9, 5, "z"), (10, 6, "W"), (11, 5, "z"), (7, 7, "z"), (9, 7, "S"),
-                        (10, 8, "S"), (9, 8, "c"), (10, 9, "c")):
-        c.set(x + lx, y + ub, col)
-    archer_cloak(c, lx, ub, flutter)
-    c.stamp(ARCHER_LEG, 12 + back_dx, 23 - back_lift, remap=DARKER)
-    # drawing arm (behind the torso when relaxed)
-    gx, gy = grip[0] + lx, grip[1] + ub
-    if pull is None:
-        pull_pt = (13 + lx, 21 + ub)
-    else:
-        pull_pt = (pull[0] + lx, pull[1] + ub)
-    c.stamp(ARCHER_TORSO, 10 + lx, 13 + ub)
-    c.stamp(ARCHER_LEG, 16 + front_dx, 23 - front_lift)
-    c.stamp(ARCHER_COWL, 9 + lx, 11 + ub)
-    head = list(ARCHER_HEAD)
-    if blink:
-        head[5] = "bcbhiijjhj"
-    c.stamp(head, 11 + lx, 3 + ub)
-    # bow + bow arm (front)
-    nock = draw_longbow(c, gx, gy, tilt, draw, arrow)
-    sleeve(c, 18 + lx, 15 + ub, gx - 1, gy, "b", "c", cuff="a")
-    # string hand
-    hand = nock if (draw or arrow) else pull_pt
-    sleeve(c, 13 + lx, 15 + ub, hand[0], hand[1], "a", "b", hand="i")
-    if fx == "release":
-        t = math.radians(tilt)
-        for k, col in ((4, "W"), (6, "z"), (8, "W")):
-            c.set(round(gx + math.cos(t) * k), round(gy + math.sin(t) * k), col)
-    if fx == "volley":
-        for (x, y, col) in ((27, 6, "W"), (29, 9, "z"), (25, 3, "z"), (30, 4, "W")):
-            c.set(x, y, col)
-    return c
-
-
-def archer_sheet() -> Canvas:
-    F = finish
-    idle = [F(archer(bob=b, blink=(i == 3))) for i, b in enumerate((0, 0, 1, 1))]
-    walk = []
-    for f in range(6):
-        p = f / 6 * 2 * math.pi
-        s = math.sin(p)
-        fd = round(2.4 * s)
-        fl = 1 if math.cos(p) > 0.5 else 0
-        bl = 1 if math.cos(p) < -0.5 else 0
-        bob = 0 if abs(s) > 0.6 else 1
-        walk.append(F(archer(bob=bob, front_dx=fd, back_dx=-fd, front_lift=fl, back_lift=bl,
-                             grip=(23 + fd // 2, 19), tilt=fd * 3, flutter=1 if bob else 0)))
-    attack = [
-        F(archer(grip=(24, 16), arrow=True, draw=1, back_dx=-1, front_dx=1)),
-        F(archer(grip=(25, 16), arrow=True, draw=5, lean=-1, back_dx=-2, front_dx=2)),
-        F(archer(grip=(25, 16), draw=0, pull=(15, 14), lean=-1, back_dx=-2, front_dx=2, fx="release")),
-        F(archer(grip=(24, 17), draw=0, pull=(14, 16), back_dx=-1, front_dx=1)),
-        F(archer(grip=(23, 18), back_dx=-1, front_dx=1)),
-    ]
-    hurt = [F(flash(archer(lean=-1, grip=(22, 19)))), F(archer(lean=-1, grip=(22, 19)))]
-    pose = dict(grip=(21, 21), tilt=20, lean=-1)
-    death = fall_frames(archer, pose, H_FOOT, 15, [-35, -70, -90, -90], 32, 32,
-                        pre=[F(flash(archer(lean=-1, grip=(22, 19)))), F(archer(crouch=2, lean=-1, grip=(21, 18), tilt=15))])
-    cast = [
-        F(archer(grip=(24, 14), tilt=-30, arrow=True, draw=1, back_dx=-1, front_dx=1)),
-        F(archer(grip=(24, 13), tilt=-45, arrow=True, draw=4, lean=-1, back_dx=-2, front_dx=2, flutter=1)),
-        F(archer(grip=(24, 13), tilt=-45, draw=0, pull=(16, 14), lean=-1, back_dx=-2, front_dx=2, fx="volley",
-                 flutter=1)),
-        F(archer(grip=(24, 15), tilt=-30, arrow=True, draw=2, back_dx=-1, front_dx=1)),
-    ]
-    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
-
-
-# ---------------------------------------------------------------- HUNTER
-# fur-trimmed hood, khaki cloak, dark leather, throwing knives, bow slung on the back
-HUNTER_HEAD = [
-    "....aabba..",
-    "...abcccba.",
-    "..abccbbbba",
-    ".abcbbbzzzy",
-    ".abbbzzccij",
-    "abbbbzhijjj",
-    "abbbbyhijoj",
-    "abbbbyhijjj",
-    ".abbbyyhiih",
-    "..abbbyyy..",
-]
-HUNTER_MANTLE = [
-    "..zzzzz......",
-    ".zWzzyzzz....",
-    "yzzyzyzyzy...",
-    "qyyqyyqyyq...",
-]
-HUNTER_TORSO = [
-    "...........",
-    ".aabbbbbaa.",
-    "abbccbbbaak",
-    "abcbbbqbaak",
-    "abbbbqbbaak",
-    "abbbqbbbaak",
-    "aabqbbbbaak",
-    "kkkrkkkcckk",
-    ".yqqyqqqqk.",
-    ".yqyqqyqqk.",
-]
-HUNTER_LEG = [
-    "kaa",
-    "kab",
-    "kab",
-    "yzy",
-    "abb",
-    "abbb",
-    "abbbb",
-    "kaaaaa",
-]
-
-
 def draw_knife(c: Canvas, hx: float, hy: float, ang: float, blade: int = 4) -> None:
     t = math.radians(ang)
     dx, dy = math.cos(t), math.sin(t)
@@ -1579,91 +974,948 @@ def draw_knife(c: Canvas, hx: float, hy: float, ang: float, blade: int = 4) -> N
         c.set(round(hx + dx * (i + 1)), round(hy + dy * (i + 1)), "W" if i == blade else ("p" if i % 2 else "z"))
 
 
-def hunter_cloak(c: Canvas, lx: int, ub: int, flutter: int = 0) -> None:
-    for y in range(14 + ub, 26):
-        k = y - 14 - ub
-        x0 = round(10 + lx - k * 0.28 - (flutter if k > 5 else 0))
-        for x in range(x0, 15 + lx):
-            c.set(x, y, "y" if x == x0 and k < 6 else ("q" if x < x0 + 3 else "a"))
-    hem_x0 = round(10 + lx - 11 * 0.28 - flutter)
-    for i, x in enumerate(range(hem_x0, 15 + lx)):
-        if i % 4 != 3:
-            c.set(x, 26, "q" if i < 3 else "a")
+# ======================================================================================
+# HEROES v3 (32x32): true 3/4 top-down view, new poses (style v2, docs/art/ART_BRIEF.md 1a)
+# The camera looks down at ~45 deg: the top of the head and the shoulders are visible, the
+# body is short ("toy" proportions, head ~1/3 of the height), feet a little apart, and every
+# horizontal ring (belt, hem, collar) curves down in the middle because its near side faces
+# the camera. One facing (right); the game mirrors for left.
+#
+# Shared rig: legs (or robe) + torso + head map + arms, posed by a dict (see hpose()).
+# Drawing space: ground row G3 = 30; build_sheet lifts every frame by 1 so the feet land on
+# y=29 and the outline under them on y=30 (1 px margin). The rig keeps at least one foot on
+# the ground row in every standing frame, so the pivot never jitters.
+#
+# Head-map keys (remapped per class): 1 2 3 hair dark/mid/light, 4 5 6 skin shadow/mid/light,
+# 7 8 beard dark/mid, 9 eye. Everything else in a map is a palette key.
+# ======================================================================================
+G3 = 30
+CX = 15  # body axis (columns 15|16)
 
 
-def hunter(bob: int = 0, back_dx: int = 0, back_lift: int = 0, front_dx: int = 0, front_lift: int = 0,
-           hand: tuple[float, float] = (21, 22), knife: float = 20, knife_shown: bool = True,
-           back_hand: tuple[float, float] | None = None, lean: int = 0, crouch: int = 0, flutter: int = 0,
-           blink: bool = False, fx: str | None = None) -> Canvas:
+def hpose(**kw) -> dict:
+    p = dict(ub=0, lean=0, hdx=0, hdy=0, near=(0, 0), far=(0, 0), kneel=False, swing=0, cloth=0,
+             eyes="open", glow=0, fx=None)
+    p.update(kw)
+    return p
+
+
+def head_v3(c: Canvas, art: list[str], x: int, y: int, hair: str, skin: str = "hij",
+            beard: str = "ab", eyes: str = "open") -> None:
+    eye = {"open": "o", "blink": skin[0], "pain": "o"}[eyes]
+    remap = {"1": hair[0], "2": hair[1], "3": hair[2], "4": skin[0], "5": skin[1], "6": skin[2],
+             "7": beard[0], "8": beard[1], "9": eye}
+    c.stamp(art, x, y, remap=remap)
+    if eyes == "pain":  # squeezed eyes: short dark dashes
+        for j, row in enumerate(art):
+            for i, ch in enumerate(row):
+                if ch == "9":
+                    c.set(x + i, y + j, skin[0])
+                    c.set(x + i, y + j - 1, "a")
+
+
+def shade_row(c: Canvas, y: int, x0: int, x1: int, ramp: str, lit_top: bool = False) -> None:
+    """ramp = dark, mid, lit. Lit on the left (light from top-left), dark on the right."""
+    for x in range(x0, x1 + 1):
+        u = (x - x0) / max(1, x1 - x0)
+        if lit_top:
+            col = ramp[2] if u < 0.75 else ramp[1]
+        else:
+            col = ramp[2] if u < 0.25 else (ramp[1] if u < 0.74 else ramp[0])
+        c.set(x, y, col)
+
+
+def block_v3(c: Canvas, cx: int, top: int, spans: list[tuple[int, int]], ramp: str,
+             lit_rows: int = 1) -> dict[int, tuple[int, int]]:
+    """Torso-like block: spans = (left, right) offsets from cx per row, top rows lit (seen from above)."""
+    rows = {}
+    for i, (l, r) in enumerate(spans):
+        y = top + i
+        shade_row(c, y, cx + l, cx + r, ramp, lit_top=i < lit_rows)
+        rows[y] = (cx + l, cx + r)
+    return rows
+
+
+def ring_v3(c: Canvas, y: int, x0: int, x1: int, cols: str, sag: float = 1.0, thick: int = 1) -> None:
+    """Horizontal ring around the body seen from above: the middle (near side) sags down.
+    cols = lit, mid, dark."""
+    for x in range(x0, x1 + 1):
+        u = (x - x0) / max(1, x1 - x0)
+        dy = round(sag * math.sin(math.pi * u))
+        col = cols[0] if u < 0.25 else (cols[1] if u < 0.75 else cols[2])
+        for t in range(thick):
+            c.set(x, y + dy + t, col)
+
+
+def leg_v3(c: Canvas, hip_x: int, hip_y: int, dx: int, lift: int, pants: str, boot: str) -> None:
+    """3-px leg from the hip to a boot on the ground row (toe points right). ramps dark, mid, lit."""
+    gy = G3 - lift
+    top_boot = gy - 2
+    n = max(1, top_boot - hip_y)
+    for y in range(hip_y, top_boot):
+        x = round(hip_x + dx * (y - hip_y) / n)
+        c.set(x, y, pants[2])
+        c.set(x + 1, y, pants[1])
+        c.set(x + 2, y, pants[0])
+    fx = hip_x + dx
+    c.set(fx, top_boot, boot[2])
+    c.set(fx + 1, top_boot, boot[2])
+    c.set(fx + 2, top_boot, boot[1])
+    c.set(fx, top_boot + 1, boot[2])
+    c.set(fx + 1, top_boot + 1, boot[1])
+    c.set(fx + 2, top_boot + 1, boot[1])
+    c.set(fx + 3, top_boot + 1, boot[1])
+    for k in range(4):
+        c.set(fx + k, gy, boot[0])
+
+
+def legs_v3(c: Canvas, p: dict, pants: str, boot: str, hip_y: int = 22) -> None:
+    """Far leg (one tone darker) then near leg. Hips 4 px apart so the feet stand apart."""
+    dk = lambda r: "".join(DARKER[ch] for ch in r)
+    if p["kneel"]:
+        kneel_legs(c, pants, boot)
+        return
+    leg_v3(c, 12, hip_y, p["far"][0], p["far"][1], dk(pants), dk(boot))
+    leg_v3(c, 16, hip_y, p["near"][0], p["near"][1], pants, boot)
+
+
+def kneel_legs(c: Canvas, pants: str, boot: str) -> None:
+    """Down on the far knee: far shin flat on the ground behind, near knee up in front."""
+    dk = lambda r: "".join(DARKER[ch] for ch in r)
+    fp, fb = dk(pants), dk(boot)
+    # far leg: thigh down to the knee on the ground, shin + boot lying back along the ground
+    for y in range(25, 30):
+        c.set(12, y, fp[2])
+        c.set(13, y, fp[1])
+        c.set(14, y, fp[0])
+    c.rect(8, 29, 6, 2, fp[1])
+    c.rect(8, 29, 6, 1, fp[2])
+    c.rect(6, 29, 2, 2, fb[1])
+    c.set(6, 29, fb[2])
+    # near leg: thigh forward to the knee, shin down to the planted boot
+    for x in range(16, 21):
+        c.set(x, 25, pants[2])
+        c.set(x, 26, pants[1])
+        c.set(x, 27, pants[0])
+    c.set(20, 24, pants[2])
+    c.set(21, 25, pants[1])
+    for y in range(27, 30):
+        c.set(19, y, pants[2])
+        c.set(20, y, pants[1])
+        c.set(21, y, pants[0])
+    c.rect(19, 28, 4, 1, boot[1])
+    c.set(19, 28, boot[2])
+    c.rect(19, 29, 4, 1, boot[1])
+    c.rect(19, G3, 4, 1, boot[0])
+
+
+def arm_v3(c: Canvas, sx: float, sy: float, hx: float, hy: float, sleeve: str, skin: str = "hij",
+           cuff: str | None = None, thick: int = 2) -> None:
+    """Chunky arm (2-3 px) from the shoulder to a 2x2 fist. sleeve = dark, mid, lit."""
+    dx, dy = hx - sx, hy - sy
+    steps = max(abs(round(dx)), abs(round(dy)), 1)
+    vertical = abs(dy) >= abs(dx)
+    for k in range(steps + 1):
+        x = round(sx + dx * k / steps)
+        y = round(sy + dy * k / steps)
+        if vertical:
+            c.set(x, y, sleeve[2])
+            for t in range(1, thick):
+                c.set(x + t, y, sleeve[1] if t < thick - 1 or thick == 2 else sleeve[0])
+        else:
+            c.set(x, y, sleeve[2])
+            for t in range(1, thick):
+                c.set(x, y + t, sleeve[1] if t < thick - 1 or thick == 2 else sleeve[0])
+    if cuff:
+        L = max(1.0, math.hypot(dx, dy))
+        ux, uy = dx / L, dy / L
+        bx, by = round(hx - ux * 1.5), round(hy - uy * 1.5)
+        if vertical:
+            for t in range(thick):
+                c.set(bx + t, by, cuff)
+        else:
+            for t in range(thick):
+                c.set(bx, by + t, cuff)
+    fist(c, hx, hy, skin)
+
+
+def fist(c: Canvas, hx: float, hy: float, skin: str = "hij") -> None:
+    hx, hy = round(hx), round(hy)
+    c.set(hx, hy, skin[2])
+    c.set(hx + 1, hy, skin[1])
+    c.set(hx, hy + 1, skin[1])
+    c.set(hx + 1, hy + 1, skin[0])
+
+
+def sparks(c: Canvas, pts: tuple, dx: int = 0, dy: int = 0) -> None:
+    for (x, y, col) in pts:
+        c.set(x + dx, y + dy, col)
+
+
+def smear(c: Canvas, cx: float, cy: float, r: float, a0: float, a1: float, cols: str = "Wp") -> None:
+    """Swing smear: a crescent of light pixels along the swing (attack release frames),
+    thick in the middle and thin at both ends."""
+    n = max(6, int(abs(a1 - a0) / 5))
+    for i in range(n + 1):
+        t = i / n
+        a = math.radians(a0 + (a1 - a0) * t)
+        w = 0.6 + 2.2 * math.sin(math.pi * t)
+        k = 0.0
+        while k <= w:
+            col = cols[0] if k < 1.0 else cols[1]
+            c.set(round(cx + math.cos(a) * (r - k)), round(cy + math.sin(a) * (r - k)), col)
+            k += 0.5
+
+
+# ---------------------------------------------------------------- lying body (death 4-5)
+def lying_v3(c: Canvas, stage: int, hair: str, skin: str, torso: str, legs: str | None, boot: str,
+             robe: str | None = None, sleeve: str | None = None, collar: str | None = None,
+             hood: str | None = None, trim: str | None = None) -> None:
+    """Hero lying on the back in 3/4: head on the left (fell backwards), feet to the right.
+    Seen from above the chest faces up (lit), the near flank shows as a darker band.
+    stage -1 = collapsing (shoulders and head still up, propped on the far arm),
+    0 = just landed (head and far arm still up 1 px), 1 = final, at rest."""
+    b = -1 if stage == 0 else 0
+    sleeve = sleeve or torso
+    dk = lambda r: "".join(DARKER[ch] for ch in r)
+    # far arm lying along the far side of the body
+    arm_v3(c, 13, 21 + b, 19, 21 + b, dk(sleeve), skin)
+    # legs or robe (feet to the right, toes up)
+    if robe:
+        for x in range(19, 28):
+            t = (x - 19) / 8
+            y0 = round(23 - t * 1.2)
+            y1 = round(29 + t * 0.6)
+            for y in range(y0, min(G3, y1) + 1):
+                v = (y - y0) / max(1, y1 - y0)
+                c.set(x, y, robe[2] if v < 0.3 else (robe[1] if v < 0.75 else robe[0]))
+        if trim:
+            for y in range(22, 30):
+                if c.get(27, y) is not None:
+                    c.set(27, y, trim)
+        c.rect(28, 22, 2, 2, dk(boot)[1])
+        c.set(29, 21, dk(boot)[2])
+        c.rect(28, 26, 2, 2, boot[1])
+        c.set(29, 25, boot[2])
+    else:
+        fl, nl = dk(legs), legs
+        c.rect(20, 23, 6, 3, fl[1])
+        c.rect(20, 23, 6, 1, fl[2])
+        c.rect(26, 21, 2, 5, dk(boot)[1])
+        c.set(26, 21, dk(boot)[2])
+        c.set(28, 22, dk(boot)[1])
+        c.rect(20, 26, 6, 3, nl[1])
+        c.rect(20, 26, 6, 1, nl[2])
+        c.rect(20, 28, 6, 1, nl[0])
+        c.rect(26, 24, 2, 5, boot[1])
+        c.set(26, 24, boot[2])
+        c.rect(28, 25, 1, 3, boot[0])
+        c.rect(26, 29, 3, 1, boot[0])
+    # torso: chest on top (lit), near flank darker
+    for x in range(11, 21):
+        u = (x - 11) / 9
+        top = 22 if 0.1 < u < 0.9 else 23
+        for y in range(top, 30):
+            col = torso[2] if y < 25 else (torso[1] if y < 28 else torso[0])
+            c.set(x, y, col)
+    if collar:
+        for y in range(21, 30):
+            for x in (11, 12):
+                if c.get(x, y) is not None or 22 <= y <= 28:
+                    c.set(x, y, collar[1] if x == 12 else collar[2])
+        c.set(12, 21, collar[2])
+        c.set(12, 29, collar[0])
+    # near arm along the body, hand on the ground
+    arm_v3(c, 13, 28, 20, 29, sleeve, skin)
+    # head: top of the head points left, the face looks up at the sky (eyes stacked, closed)
+    remap = {"1": (hood or hair)[0], "2": (hood or hair)[1], "3": (hood or hair)[2],
+             "4": skin[0], "5": skin[1], "6": skin[2]}
+    if stage == -1:
+        # shoulders still off the ground: chest block rising to the left, head above it
+        arm_v3(c, 12, 19, 8, 28, dk(sleeve), skin)
+        for x in range(9, 17):
+            t = (16 - x) / 7
+            top = round(22 - t * 4)
+            for y in range(top, 30):
+                col = torso[2] if y < top + 2 else (torso[1] if y < 27 else torso[0])
+                c.set(x, y, col)
+        if collar:
+            for x in range(8, 13):
+                c.set(x, round(22 - (16 - x) / 7 * 4) - 1, collar[2])
+                c.set(x, round(22 - (16 - x) / 7 * 4), collar[1])
+        c.stamp(LYING_HEAD, 1, 13, remap=remap)
+    else:
+        c.stamp(LYING_HEAD, 2, 21 + b, remap=remap)
+    if hood:
+        ox, oy = (1, 13) if stage == -1 else (2, 21 + b)
+        for (x, y) in ((3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (4, 6), (4, 0), (5, 6), (6, 6)):
+            c.set(ox + x, oy + y, hood[3] if len(hood) > 3 else hood[2])
+
+
+LYING_HEAD = [
+    "..12233...",
+    ".1233666..",
+    "1223646665",
+    "1223666665",
+    "1223666665",
+    "1223646665",
+    ".122366655",
+    "..1122555.",
+]
+
+
+# ---------------------------------------------------------------- WARRIOR
+# blond hair tied back, beard, rust fur collar, brown leather jerkin, round dark shield, sword
+WAR3_HEAD = [
+    "...33322...",
+    ".233333221.",
+    "23333222211",
+    "12322266665",
+    "12246666665",
+    "11256669695",
+    "11256666655",
+    ".1125788865",
+    "..11578875.",
+    "....5775...",
+]
+WAR3_JERKIN = "kab"
+WAR3_PANTS = "kab"
+WAR3_BOOT = "abc"
+WAR3_SPANS = [(-5, 5), (-5, 5), (-5, 5), (-5, 5), (-5, 4), (-4, 4), (-4, 4), (-4, 4), (-4, 4), (-4, 4)]
+
+
+def shield_v3(c: Canvas, cx: float, cy: float) -> None:
+    """Round shield facing the viewer: steel rim lit top-left, dark wood, bronze boss, pale emblem."""
+    c.ellipse(cx, cy, 4.7, 5.2, "m")
+    c.ellipse(cx + 0.2, cy + 0.2, 3.7, 4.2, "a")
+    for y in range(int(cy) - 5, int(cy) + 6):
+        for x in range(int(cx) - 5, int(cx) + 6):
+            if c.get(x, y) == "a" and (x + 0.5 - cx) + (y + 0.5 - cy) * 0.8 > 1.6:
+                c.set(x, y, "k")
+            if c.get(x, y) == "m" and (x + 0.5 - cx) + (y + 0.5 - cy) < -2.5:
+                c.set(x, y, "n")
+    cx, cy = round(cx - 0.5), round(cy - 0.5)
+    for (dx, dy, col) in ((-2, -4, "p"), (-3, -3, "p"), (0, -3, "z"), (0, -2, "z"), (-2, 0, "z"), (2, 0, "y"),
+                          (0, 2, "y"), (0, 3, "y"), (-1, 0, "q"), (1, 0, "q"), (0, -1, "q"), (0, 1, "q"),
+                          (0, 0, "r"), (-1, -1, "s")):
+        c.set(cx + dx, cy + dy, col)
+
+
+def warrior_v3(p: dict, sword: float = 112, sword_len: int = 8, nh=None, fh=None, shield=True,
+               sword_behind: bool = False) -> Canvas:
     c = Canvas(32, 32)
-    ub = bob + crouch
-    lx = lean
-    # bow slung diagonally across the back
-    for i in range(14):
-        x = 7 + lx + round(i * 0.45 + 1.2 * math.sin(i / 13 * math.pi))
-        y = 9 + ub + i
-        c.set(x, y, "c" if i < 6 else "b")
-    hunter_cloak(c, lx, ub, flutter)
-    c.stamp(HUNTER_LEG, 12 + back_dx, 23 - back_lift, remap=DARKER)
-    if back_hand:
-        sleeve(c, 13 + lx, 16 + ub, back_hand[0] + lx, back_hand[1] + ub, "k", "a")
-    c.stamp(HUNTER_TORSO, 10 + lx, 13 + ub)
-    c.set(13 + lx, 20 + ub, "p")  # spare knife on the belt
-    c.set(13 + lx, 21 + ub, "b")
-    c.stamp(HUNTER_LEG, 16 + front_dx, 23 - front_lift)
-    c.stamp(HUNTER_MANTLE, 9 + lx, 12 + ub)
-    head = list(HUNTER_HEAD)
-    if blink:
-        head[6] = "abbbbzhijhj"
-    c.stamp(head, 10 + lx, 2 + ub)
-    hx, hy = hand[0] + lx, hand[1] + ub
-    if knife_shown:
-        draw_knife(c, hx, hy, knife)
-    sleeve(c, 18 + lx, 15 + ub, hx, hy, "q", "y", cuff="a")
-    if back_hand:
-        c.set(back_hand[0] + lx, back_hand[1] + ub, "i")
-    if fx == "throw":
-        for (x, y, col) in ((26, 13, "W"), (28, 13, "z"), (29, 14, "W")):
-            c.set(x, y, col)
-    if fx in ("call", "call2"):
-        for (x, y, col) in ((24, 8, "W"), (25, 9, "W"), (25, 10, "W"), (24, 11, "W"),
-                            (27, 7, "z"), (28, 8, "z"), (28, 9, "z"), (28, 10, "z"), (27, 11, "z")):
-            c.set(x, y + (1 if fx == "call2" else 0), col)
-    if fx == "call2":
-        for (x, y, col) in ((30, 7, "y"), (30, 11, "y"), (27, 2, "s")):
-            c.set(x, y, col)
+    ub, lx = p["ub"], p["lean"]
+    legs_v3(c, p, WAR3_PANTS, WAR3_BOOT)
+    if p["kneel"]:
+        ub += 3
+    nhx, nhy = nh if nh else (16 - p["swing"] // 2, 21)
+    fhx, fhy = fh if fh else (22 + p["swing"] // 2, 19)
+    nhx, nhy, fhx, fhy = nhx + lx, nhy + ub, fhx + lx, fhy + ub
+    if sword_behind:
+        draw_sword(c, nhx, nhy, sword, sword_len)
+    # torso
+    rows = block_v3(c, CX + lx, 13 + ub, WAR3_SPANS, WAR3_JERKIN, lit_rows=1)
+    # cross strap (bronze studs) and belt ring
+    for k in range(6):
+        c.set(CX - 3 + lx + k, 15 + ub + k, "k" if k % 2 else "a")
+    c.set(CX - 1 + lx, 17 + ub, "r")
+    ring_v3(c, 20 + ub, CX - 4 + lx, CX + 4 + lx, "bak", sag=1.0)
+    c.set(CX + 1 + lx, 21 + ub, "r")
+    c.set(CX + 2 + lx, 21 + ub, "q")
+    # fur collar around the shoulders (seen from above: a thick ring)
+    for y in range(10, 18):
+        for x in range(CX - 8, CX + 9):
+            nx, ny = (x + 0.5 - (CX + 0.5)) / 6.7, (y + 0.5 - 14.2) / 3.0
+            if nx * nx + ny * ny <= 1:
+                col = "g" if (ny < -0.2 and nx < 0.3) else ("f" if nx < 0.55 else "e")
+                if ny > 0.55:
+                    col = "e" if nx > -0.4 else "f"
+                c.set(x + lx, y + ub, col)
+    for x in range(CX - 5, CX + 6):  # ragged fur edge
+        if (x - CX) % 3 == 1:
+            c.set(x + lx, 17 + ub, None)
+        elif (x - CX) % 3 == 0:
+            c.set(x + lx, 18 + ub, "f" if x < CX else "e")
+    head_v3(c, WAR3_HEAD, 10 + lx + p["hdx"], 3 + ub + p["hdy"], "bcd", beard="cd", eyes=p["eyes"])
+    if shield:
+        shield_v3(c, fhx + 0.5, fhy + 0.5)
+    if not sword_behind:
+        draw_sword(c, nhx, nhy, sword, sword_len)
+    arm_v3(c, CX + 3 + lx, 15 + ub, nhx, nhy, "hij", cuff="a")
+    c.set(CX + 3 + lx, 15 + ub, "b")
+    c.set(CX + 4 + lx, 15 + ub, "a")
+    c.set(CX + 3 + lx, 14 + ub, "c")
+    if p["fx"] == "slash":
+        smear(c, CX + lx, 15 + ub, 11, -70, 40)
+    if p["fx"] == "slam":
+        sparks(c, ((22, 30, "W"), (29, 30, "W"), (21, 28, "z"), (30, 27, "z"), (20, 25, "W"), (31, 24, "W"),
+                   (24, 27, "W"), (28, 26, "z")))
     return c
 
 
-def hunter_sheet() -> Canvas:
+def warrior_lying(stage: int) -> Canvas:
+    c = Canvas(32, 32)
+    draw_sword(c, 15, 19, 5, 10)  # dropped sword behind the body
+    lying_v3(c, stage, "bcd", "hij", WAR3_JERKIN, WAR3_PANTS, WAR3_BOOT, collar="efg")
+    shield_v3(c, 24.5, 18.5 - (1 if stage == 0 else 0))
+    return c
+
+
+def warrior_sheet_v3() -> Canvas:
     F = finish
-    idle = [F(hunter(bob=b, blink=(i == 3))) for i, b in enumerate((0, 0, 1, 1))]
-    walk = []
-    for f in range(6):
-        p = f / 6 * 2 * math.pi
-        s = math.sin(p)
-        fd = round(2.4 * s)
-        fl = 1 if math.cos(p) > 0.5 else 0
-        bl = 1 if math.cos(p) < -0.5 else 0
-        bob = 0 if abs(s) > 0.6 else 1
-        walk.append(F(hunter(bob=bob, front_dx=fd, back_dx=-fd, front_lift=fl, back_lift=bl,
-                             hand=(21 - fd // 2, 22), knife=20 + fd * 6, flutter=1 if bob else 0)))
+    W = warrior_v3
+    idle = [F(W(hpose(ub=b, eyes="blink" if i == 3 else "open"))) for i, b in enumerate((0, 0, 1, 1))]
+    walk = [F(W(p, sword=112 + p["swing"] * 5)) for p in walk_poses()]
     attack = [
-        F(hunter(hand=(18, 3), knife=-160, lean=-1, back_dx=-1, front_dx=1)),
-        F(hunter(hand=(22, 3), knife=-90, back_dx=-1, front_dx=1)),
-        F(hunter(hand=(25, 14), knife_shown=False, lean=1, back_dx=-2, front_dx=2, fx="throw")),
-        F(hunter(hand=(23, 19), knife_shown=False, lean=1, back_dx=-2, front_dx=2)),
-        F(hunter(hand=(21, 21), knife=20, back_dx=-1, front_dx=1)),
+        F(W(hpose(lean=-1, near=(1, 0), far=(-1, 0)), nh=(13, 13), sword=-150, sword_behind=True)),   # wind-up
+        F(W(hpose(lean=-1, ub=-1, near=(1, 0), far=(-2, 0)), nh=(14, 9), sword=-115, sword_behind=True,
+            fh=(19, 19))),
+        F(W(hpose(lean=1, ub=1, near=(2, 0), far=(-2, 0), fx="slash"), nh=(22, 17), sword=15, sword_behind=False, sword_len=10,
+            fh=(18, 20))),                                                                          # hit
+        F(W(hpose(lean=1, ub=1, near=(2, 0), far=(-2, 0)), nh=(21, 21), sword=70, sword_behind=False, fh=(18, 20))),
+        F(W(hpose(near=(1, 0), far=(-1, 0)), nh=(17, 21), sword=95)),
     ]
-    hurt = [F(flash(hunter(lean=-1, hand=(20, 21)))), F(hunter(lean=-1, hand=(20, 21)))]
-    pose = dict(hand=(20, 22), knife=60, lean=-1)
-    death = fall_frames(hunter, pose, H_FOOT, 15, [-35, -70, -90, -90], 32, 32,
-                        pre=[F(flash(hunter(lean=-1, hand=(20, 21)))), F(hunter(crouch=2, lean=-1, hand=(20, 21), knife=30))])
+    hurt_p = hpose(lean=-1, hdx=-1, eyes="pain")
+    hurt = [F(flash(W(hurt_p, nh=(17, 20), fh=(20, 18), sword=100, sword_behind=False))), F(W(hurt_p, nh=(17, 20), fh=(20, 18), sword=100, sword_behind=False))]
+    death = [
+        F(W(hpose(lean=-1, hdx=-1, hdy=-1, eyes="pain", far=(-2, 0)), nh=(16, 19), fh=(19, 17), sword=130, sword_behind=False)),
+        F(W(hpose(kneel=True, eyes="pain"), nh=(19, 20), fh=(19, 19), sword=80, sword_behind=False)),
+        F(W(hpose(kneel=True, ub=1, hdx=1, hdy=1, eyes="blink"), nh=(20, 22), fh=(17, 21), sword=10, sword_behind=False,
+            shield=True)),
+        F(warrior_lying(-1)),
+        F(warrior_lying(0)),
+        F(warrior_lying(1)),
+    ]
     cast = [
-        F(hunter(hand=(21, 10), knife_shown=False)),
-        F(hunter(hand=(21, 10), knife_shown=False, fx="call")),
-        F(hunter(hand=(24, 4), knife_shown=False, bob=-1, back_dx=-1, front_dx=1, fx="call2")),
-        F(hunter(hand=(23, 8), knife_shown=False, back_dx=-1, front_dx=1)),
+        F(W(hpose(ub=0), nh=(21, 12), sword=-80, sword_behind=False, fh=(19, 21))),
+        F(W(hpose(ub=-1, near=(1, 0), far=(-1, 0)), nh=(21, 9), sword=-85, sword_behind=False, fh=(19, 21))),
+        F(W(hpose(ub=2, near=(2, 0), far=(-2, 0)), nh=(22, 19), sword=80, sword_behind=False, sword_len=9, fh=(17, 21))),
+        F(W(hpose(ub=2, near=(2, 0), far=(-2, 0), fx="slam"), nh=(22, 19), sword=80, sword_behind=False, sword_len=9, fh=(17, 21))),
+    ]
+    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
+
+
+def walk_poses() -> list[dict]:
+    """6-frame walk: contact, down, passing (far leg lifted), contact, down, passing (near lifted).
+    Body is 1 px lower on the 'down' frames; arms swing against the legs."""
+    return [
+        hpose(near=(2, 0), far=(-2, 0), swing=-2, cloth=0),
+        hpose(near=(1, 0), far=(-1, 0), swing=-1, ub=1, cloth=1),
+        hpose(near=(0, 0), far=(0, 1), swing=0, cloth=1),
+        hpose(near=(-2, 0), far=(2, 0), swing=2, cloth=0),
+        hpose(near=(-1, 0), far=(1, 0), swing=1, ub=1, cloth=1),
+        hpose(near=(0, 1), far=(0, 0), swing=0, cloth=1),
+    ]
+
+
+# ---------------------------------------------------------------- robes (mage, healer)
+def robe_v3(c: Canvas, p: dict, top: int, hw0: float, hw1: float, ramp: str, trim: str | None,
+            boot: str = "kab", power: float = 1.3) -> dict[int, tuple[int, int]]:
+    """Bell robe from the shoulders to the ground, lit left / dark right. The hem is a curve
+    (near side lower) with a trim band; boot toes peek out under it and alternate in walk."""
+    ub, lx = p["ub"], p["lean"]
+    dk = "".join(DARKER[ch] for ch in boot)
+    if p["kneel"]:
+        top += 3
+    # toes under the hem (far one darker), on the ground row
+    nd, fd = p["near"][0], p["far"][0]
+    for (bx, lift, b) in ((CX - 3 + fd, p["far"][1], dk), (CX + 1 + nd, p["near"][1], boot)):
+        c.rect(bx, G3 - lift, 4, 1, b[1])
+        c.set(bx + 3, G3 - lift, b[0])
+        c.set(bx, G3 - 1 - lift, b[2])
+        c.set(bx + 1, G3 - 1 - lift, b[1])
+        c.set(bx + 2, G3 - 1 - lift, b[1])
+    bottom = G3 - 1
+    sway = (-1 if p["cloth"] else 0) + (nd - fd) * 0.25
+    rows = {}
+    for y in range(top + ub, bottom + 1):
+        t = (y - top - ub) / max(1, bottom - top - ub)
+        hw = hw0 + (hw1 - hw0) * t ** power
+        mid = CX + 0.5 + lx * (1 - t) + sway * t
+        x0, x1 = round(mid - hw), round(mid + hw) - 1
+        if y == bottom:          # curved hem: corners lifted
+            x0, x1 = x0 + 2, x1 - 2
+        elif y == bottom - 1:
+            x0, x1 = x0 + 1, x1 - 1
+        shade_row(c, y, x0, x1, ramp, lit_top=(y == top + ub))
+        rows[y] = (x0, x1)
+    if trim:
+        # trim follows the hem curve: lowest robe pixel + one above in each column
+        cols: dict[int, int] = {}
+        for y, (x0, x1) in rows.items():
+            for x in range(x0, x1 + 1):
+                cols[x] = max(cols.get(x, 0), y)
+        xs = sorted(cols)
+        for x in xs:
+            u = (x - xs[0]) / max(1, xs[-1] - xs[0])
+            col = trim[0] if u < 0.7 else trim[1]
+            c.set(x, cols[x], col)
+            c.set(x, cols[x] - 1, col if u < 0.7 else trim[1])
+    return rows
+
+
+# ---------------------------------------------------------------- MAGE
+# long dark hair and beard, high violet collar, dark purple robe with gold trim, crystal staff
+MAGE3_HEAD = [
+    "...33322...",
+    ".233333221.",
+    "23333222211",
+    "12322266665",
+    "11246666665",
+    "11156669695",
+    "11156666655",
+    "1111788887.",
+    "111.788887.",
+    ".1...7887..",
+]
+MAGE3_ROBE = "KLM"
+
+
+def mage_v3(p: dict, nh=None, staff: float = -90, up: float = 15, down: float = 10, fh=None,
+            far_up: bool = False) -> Canvas:
+    c = Canvas(32, 32)
+    ub, lx = p["ub"], p["lean"]
+    if p["kneel"]:
+        ub += 3
+    nhx, nhy = nh if nh else (21 - p["swing"] // 2, 19)
+    nhx, nhy = nhx + lx, nhy + ub
+    rows = robe_v3(c, p, 13, 5.0, 7.8, MAGE3_ROBE, "rq")
+    # front opening (gold edge) at the near-front of the robe
+    for y in range(20 + ub, G3 - 1):
+        if y in rows:
+            x0, x1 = rows[y]
+            ox = x0 + round((x1 - x0) * 0.62)
+            c.set(ox, y, "r")
+            c.set(ox + 1, y, "K")
+    # belt + pouch
+    yb = 19 + ub
+    x0, x1 = rows[yb]
+    ring_v3(c, yb, x0, x1, "bak", sag=1.0)
+    c.set(CX + 1 + lx, yb + 1, "r")
+    c.rect(x0 + 1, yb + 2, 2, 2, "b")
+    c.set(x0 + 1, yb + 2, "c")
+    # high collar ring around the neck (seen from above)
+    for y in range(10, 17):
+        for x in range(CX - 7, CX + 8):
+            nx, ny = (x + 0.5 - (CX + 0.5)) / 6.2, (y + 0.5 - 13.8) / 2.9
+            if nx * nx + ny * ny <= 1:
+                col = "M" if (ny < 0 and nx < 0.2) else ("L" if nx < 0.6 else "K")
+                if ny > 0.45:
+                    col = "r" if nx < 0.5 else "q"
+                c.set(x + lx, y + ub, col)
+    if far_up and fh:  # raised far arm beside the head
+        arm_v3(c, CX - 3 + lx, 14 + ub, fh[0] + lx, fh[1] + ub, "KLM", cuff="r", thick=3)
+    head_v3(c, MAGE3_HEAD, 10 + lx + p["hdx"], 3 + ub + p["hdy"], "kab", beard="ka", eyes=p["eyes"])
+    # beard falls over the chest
+    for (x, y, col) in ((CX + 1, 13, "a"), (CX + 2, 13, "a"), (CX + 3, 13, "k"), (CX + 1, 14, "a"),
+                        (CX + 2, 14, "k"), (CX + 2, 15, "k")):
+        c.set(x + lx + p["hdx"], y + ub + p["hdy"], col)
+    tx, ty = draw_staff(c, nhx, nhy, staff, up, down, shaft="b", hi="c")
+    if fh and not far_up:
+        arm_v3(c, CX - 1 + lx, 15 + ub, fh[0] + lx, fh[1] + ub, "KLM", cuff="r", thick=3)
+    arm_v3(c, CX + 3 + lx, 15 + ub, nhx, nhy, "KMN", cuff="r", thick=3)
+    draw_crystal(c, tx, ty, p["glow"])
+    if p["fx"] == "spark":
+        sparks(c, ((3, 0, "W"), (5, 0, "N"), (4, -2, "C"), (4, 2, "C"), (6, -1, "N")), tx, ty)
+    if p["fx"] == "ground":
+        sparks(c, ((5, 29, "N"), (8, 27, "C"), (25, 29, "N"), (28, 26, "C"), (11, 24, "W"), (27, 22, "W"),
+                   (4, 25, "C"), (29, 29, "W")))
+    return c
+
+
+def mage_lying(stage: int) -> Canvas:
+    c = Canvas(32, 32)
+    draw_staff(c, 6, 18, -8, 18, 4, shaft="b", hi="c")
+    draw_crystal(c, 24, 15 + (stage == 0), 0)
+    lying_v3(c, stage, "kab", "hij", MAGE3_ROBE, None, "kab", robe=MAGE3_ROBE, trim="r", collar="KLM")
+    for (x, y, col) in ((10, 25, "a"), (10, 26, "k"), (11, 26, "a"), (11, 27, "k"), (10, 24, "a")):
+        c.set(x, y - (stage == 0), col)  # beard
+    return c
+
+
+def mage_sheet_v3() -> Canvas:
+    F = finish
+    M = mage_v3
+    idle = [F(M(hpose(ub=b, cloth=(i in (1, 2)), eyes="blink" if i == 3 else "open"), up=15 - b))
+            for i, b in enumerate((0, 0, 1, 1))]
+    walk = [F(M(p, staff=-90 - p["swing"] * 2, up=15 - p["ub"])) for p in walk_poses()]
+    attack = [
+        F(M(hpose(lean=-1, glow=1), nh=(18, 18), staff=-125, up=12, down=8)),                     # draw back
+        F(M(hpose(lean=-1, ub=-1, glow=1, near=(1, 0), far=(-1, 0)), nh=(17, 17), staff=-135, up=12, down=7)),
+        F(M(hpose(lean=1, ub=1, glow=2, fx="spark", near=(2, 0), far=(-2, 0)), nh=(24, 17), staff=-35, up=8,
+            down=8, fh=(22, 19))),                                                                # release
+        F(M(hpose(lean=1, ub=1, glow=1, near=(2, 0), far=(-2, 0)), nh=(23, 18), staff=-45, up=9, down=8)),
+        F(M(hpose(near=(1, 0), far=(-1, 0)), nh=(21, 19), staff=-80, up=14)),
+    ]
+    hurt_p = hpose(lean=-1, hdx=-1, eyes="pain")
+    hurt = [F(flash(M(hurt_p, nh=(20, 19), staff=-105))), F(M(hurt_p, nh=(20, 19), staff=-105))]
+    death = [
+        F(M(hpose(lean=-1, hdx=-1, hdy=-1, eyes="pain"), nh=(19, 18), staff=-112)),
+        F(M(hpose(kneel=True, eyes="pain"), nh=(21, 19), staff=-100, up=13)),
+        F(M(hpose(kneel=True, ub=1, hdx=1, hdy=1, eyes="blink"), nh=(21, 21), staff=-60, up=13, down=4)),
+        F(mage_lying(-1)),
+        F(mage_lying(0)),
+        F(mage_lying(1)),
+    ]
+    cast = [
+        F(M(hpose(glow=1), nh=(20, 16), staff=-90, up=12, fh=(20, 20))),
+        F(M(hpose(ub=-1, glow=2, cloth=1), nh=(20, 12), staff=-90, up=9, down=12, fh=(20, 16))),
+        F(M(hpose(ub=-1, glow=2, cloth=1, fx="ground"), nh=(20, 12), staff=-90, up=9, down=12, fh=(20, 16))),
+        F(M(hpose(glow=1), nh=(20, 16), staff=-90, up=12, fh=(20, 20))),
+    ]
+    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
+
+
+# ---------------------------------------------------------------- HEALER
+# dark curly hair, green hooded mantle on the shoulders, white robe with green panel, gold cross staff
+HEAL3_HEAD = [
+    "..333322...",
+    ".23333322 1",
+    "23333322221",
+    "23322266662",
+    "12246666662",
+    "11256669695",
+    "11256666651",
+    "111256665 1",
+    "1111.5555..",
+    ".11........",
+]
+HEAL3_ROBE = "yzW"
+
+
+def healer_v3(p: dict, nh=None, staff: float = -90, up: float = 14, down: float = 10, fh=None,
+              far_up: bool = False) -> Canvas:
+    c = Canvas(32, 32)
+    ub, lx = p["ub"], p["lean"]
+    if p["kneel"]:
+        ub += 3
+    nhx, nhy = nh if nh else (21 - p["swing"] // 2, 19)
+    nhx, nhy = nhx + lx, nhy + ub
+    rows = robe_v3(c, p, 14, 4.6, 7.2, HEAL3_ROBE, "vu", boot="abc")
+    # green front panel with gold stitches
+    for y in range(19 + ub, G3 - 1):
+        if y in rows:
+            x0, x1 = rows[y]
+            ox = x0 + round((x1 - x0) * 0.56)
+            c.set(ox, y, "v" if y % 3 else "r")
+            c.set(ox + 1, y, "u")
+    yb = 19 + ub
+    x0, x1 = rows[yb]
+    ring_v3(c, yb, x0, x1, "rrq", sag=1.0)
+    c.rect(x0 + 1, yb + 2, 2, 2, "b")
+    c.set(x0 + 1, yb + 2, "c")
+    # green mantle over the shoulders + hood lying on the back (left)
+    for y in range(9, 19):
+        for x in range(CX - 8, CX + 8):
+            nx, ny = (x + 0.5 - (CX + 0.2)) / 6.6, (y + 0.5 - 14.6) / 3.4
+            if nx * nx + ny * ny <= 1:
+                col = "w" if (ny < -0.1 and nx < 0.1) else ("v" if nx < 0.55 else "u")
+                if ny > 0.5:
+                    col = "u" if nx < 0.4 else "t"
+                c.set(x + lx, y + ub, col)
+    c.ellipse(CX - 4.5 + lx, 12.5 + ub, 2.6, 2.4, "u")   # hood bunched behind the neck
+    c.set(CX - 6 + lx, 11 + ub, "v")
+    c.set(CX - 5 + lx, 11 + ub, "v")
+    c.set(CX + 1 + lx, 17 + ub, "r")  # gold clasp
+    if far_up and fh:  # raised far arm beside the head
+        arm_v3(c, CX - 5 + lx, 14 + ub, fh[0] + lx, fh[1] + ub, "yzW", cuff="v", thick=2)
+    head_v3(c, HEAL3_HEAD, 10 + lx + p["hdx"], 3 + ub + p["hdy"], "abc", eyes=p["eyes"])
+    tx, ty = draw_staff(c, nhx, nhy, staff, up, down, shaft="q", hi="r")
+    if fh and not far_up:
+        arm_v3(c, CX - 1 + lx, 15 + ub, fh[0] + lx, fh[1] + ub, "yzW", cuff="v", thick=2)
+    arm_v3(c, CX + 3 + lx, 15 + ub, nhx, nhy, "yzW", cuff="v", thick=2)
+    draw_cross(c, tx, ty, p["glow"])
+    if p["fx"] == "spark":
+        sparks(c, ((3, 0, "W"), (5, 0, "s"), (4, -2, "x"), (4, 2, "x"), (6, -1, "s")), tx, ty)
+    if p["fx"] == "light":
+        sparks(c, ((5, 8, "s"), (8, 3, "W"), (26, 4, "s"), (11, 1, "s"), (27, 10, "W"), (4, 14, "W"),
+                   (6, 24, "x"), (27, 25, "x")))
+    return c
+
+
+def healer_lying(stage: int) -> Canvas:
+    c = Canvas(32, 32)
+    draw_staff(c, 7, 18, -6, 17, 4, shaft="q", hi="r")
+    draw_cross(c, 24, 16 + (stage == 0), 0)
+    lying_v3(c, stage, "abc", "hij", "tuv", None, "abc", robe=HEAL3_ROBE, trim="v", sleeve="yzW",
+             collar="tuv")
+    return c
+
+
+def healer_sheet_v3() -> Canvas:
+    F = finish
+    H = healer_v3
+    idle = [F(H(hpose(ub=b, cloth=(i in (1, 2)), eyes="blink" if i == 3 else "open"), up=14 - b))
+            for i, b in enumerate((0, 0, 1, 1))]
+    walk = [F(H(p, staff=-90 - p["swing"] * 2, up=14 - p["ub"])) for p in walk_poses()]
+    attack = [
+        F(H(hpose(lean=-1, glow=1), nh=(18, 18), staff=-125, up=12, down=8)),
+        F(H(hpose(lean=-1, ub=-1, glow=1, near=(1, 0), far=(-1, 0)), nh=(17, 17), staff=-135, up=12, down=7)),
+        F(H(hpose(lean=1, ub=1, glow=2, fx="spark", near=(2, 0), far=(-2, 0)), nh=(24, 17), staff=-30, up=7,
+            down=8, fh=(22, 19))),
+        F(H(hpose(lean=1, ub=1, glow=1, near=(2, 0), far=(-2, 0)), nh=(23, 18), staff=-40, up=8, down=8)),
+        F(H(hpose(near=(1, 0), far=(-1, 0)), nh=(21, 19), staff=-80, up=13)),
+    ]
+    hurt_p = hpose(lean=-1, hdx=-1, eyes="pain")
+    hurt = [F(flash(H(hurt_p, nh=(20, 19), staff=-105))), F(H(hurt_p, nh=(20, 19), staff=-105))]
+    death = [
+        F(H(hpose(lean=-1, hdx=-1, hdy=-1, eyes="pain"), nh=(19, 18), staff=-112)),
+        F(H(hpose(kneel=True, eyes="pain"), nh=(21, 19), staff=-100, up=12)),
+        F(H(hpose(kneel=True, ub=1, hdx=1, hdy=1, eyes="blink"), nh=(21, 21), staff=-60, up=12, down=4)),
+        F(healer_lying(-1)),
+        F(healer_lying(0)),
+        F(healer_lying(1)),
+    ]
+    cast = [
+        F(H(hpose(glow=1), nh=(20, 15), staff=-90, up=11, fh=(7, 10), far_up=True)),
+        F(H(hpose(ub=-1, glow=2, cloth=1), nh=(20, 11), staff=-90, up=8, down=12, fh=(6, 6), far_up=True)),
+        F(H(hpose(ub=-1, glow=2, cloth=1, fx="light"), nh=(20, 11), staff=-90, up=8, down=12, fh=(6, 6),
+            far_up=True)),
+        F(H(hpose(glow=1), nh=(20, 15), staff=-90, up=11, fh=(7, 11), far_up=True)),
+    ]
+    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
+
+
+# ---------------------------------------------------------------- ARCHER
+# short brown hair, green cowl + cloak, leather jerkin, quiver on the back, longbow in the far hand
+ARCH3_HEAD = [
+    "...33322...",
+    ".233333221.",
+    "23333322211",
+    "12333222665",
+    "12246666665",
+    "11256669695",
+    ".1256666655",
+    "..12566655.",
+    "...255555..",
+    "....5555...",
+]
+ARCH3_JERKIN = "abc"
+ARCH3_PANTS = "tuv"
+ARCH3_BOOT = "abc"
+ARCH3_SPANS = [(-4, 4), (-5, 4), (-5, 4), (-5, 4), (-4, 4), (-4, 4), (-4, 4), (-4, 4), (-4, 4), (-4, 4)]
+
+
+def archer_v3(p: dict, grip=None, tilt: float = 0, draw: float = 0, arrow: bool = False, pull=None,
+              fx: str | None = None) -> Canvas:
+    c = Canvas(32, 32)
+    ub, lx = p["ub"], p["lean"]
+    if p["kneel"]:
+        ub += 3
+    # cloak hanging behind the back (left), flutters in walk
+    fl = p["cloth"]
+    for y in range(13 + ub, 27 + (0 if p["kneel"] else 0)):
+        k = y - 13 - ub
+        x0 = round(CX - 6 + lx - k * 0.3 - (fl if k > 6 else 0))
+        for x in range(x0, CX + 1 + lx):
+            c.set(x, y, "v" if x == x0 and k < 8 else ("u" if x < x0 + 3 else "t"))
+    hem0 = round(CX - 6 + lx - (26 - 13) * 0.3 - fl)
+    for i, x in enumerate(range(hem0, CX + 1 + lx)):
+        if i % 3 != 2:
+            c.set(x, 27, "t")
+    # quiver on the back: tube across the far shoulder, fletchings above it
+    c.line(CX - 4 + lx, 19 + ub, CX - 8 + lx, 9 + ub, "a")
+    c.line(CX - 3 + lx, 19 + ub, CX - 7 + lx, 9 + ub, "b")
+    c.line(CX - 2 + lx, 19 + ub, CX - 6 + lx, 9 + ub, "a")
+    sparks(c, ((CX - 9, 6, "W"), (CX - 8, 5, "z"), (CX - 7, 6, "W"), (CX - 6, 5, "z"), (CX - 9, 7, "S"),
+               (CX - 7, 7, "S"), (CX - 8, 8, "c"), (CX - 6, 8, "c"), (CX - 8, 7, "a")), lx, ub)
+    legs_v3(c, p, ARCH3_PANTS, ARCH3_BOOT)
+    block_v3(c, CX + lx, 13 + ub, ARCH3_SPANS, ARCH3_JERKIN, lit_rows=1)
+    # laced front + belt
+    for y in range(16, 20):
+        c.set(CX + 2 + lx, y + ub, "a")
+    ring_v3(c, 20 + ub, CX - 4 + lx, CX + 4 + lx, "kka", sag=1.0)
+    c.set(CX + 1 + lx, 21 + ub, "r")
+    # green cowl around the neck (seen from above)
+    for y in range(10, 18):
+        for x in range(CX - 8, CX + 8):
+            nx, ny = (x + 0.5 - (CX + 0.2)) / 6.4, (y + 0.5 - 14.2) / 2.9
+            if nx * nx + ny * ny <= 1:
+                col = "w" if (ny < -0.1 and nx < 0.0) else ("v" if nx < 0.55 else "u")
+                if ny > 0.5:
+                    col = "u" if nx < 0.4 else "t"
+                c.set(x + lx, y + ub, col)
+    for x in range(CX - 4, CX + 5, 3):  # pointed cowl edge
+        c.set(x + lx, 17 + ub + (1 if abs(x - CX) < 3 else 0), "u" if x < CX else "t")
+    head_v3(c, ARCH3_HEAD, 10 + lx + p["hdx"], 3 + ub + p["hdy"], "abc", eyes=p["eyes"])
+    # bow in the far hand in front of the body, string hand = near hand
+    gx, gy = grip if grip else (23, 18)
+    gx, gy = gx + lx, gy + ub
+    nock = draw_longbow(c, gx, gy, tilt, draw, arrow)
+    arm_v3(c, CX + 2 + lx, 15 + ub, gx - 1, gy, "abc", cuff="k")
+    hand = nock if (draw or arrow) else ((pull[0] + lx, pull[1] + ub) if pull else (CX + 2 + lx, 21 + ub))
+    arm_v3(c, CX + 3 + lx, 15 + ub, hand[0], hand[1], "abc", cuff="k")
+    if fx == "release":
+        t = math.radians(tilt)
+        for k, col in ((4, "W"), (6, "z"), (8, "W"), (10, "z")):
+            c.set(round(gx + math.cos(t) * k), round(gy + math.sin(t) * k), col)
+    if fx == "volley":
+        sparks(c, ((27, 6, "W"), (29, 9, "z"), (25, 3, "z"), (30, 4, "W"), (28, 2, "W")))
+    return c
+
+
+def archer_lying(stage: int) -> Canvas:
+    c = Canvas(32, 32)
+    draw_longbow(c, 16, 18, -90, 0, False)
+    lying_v3(c, stage, "abc", "hij", ARCH3_JERKIN, ARCH3_PANTS, ARCH3_BOOT, collar="tuv")
+    return c
+
+
+def archer_sheet_v3() -> Canvas:
+    F = finish
+    A = archer_v3
+    idle = [F(A(hpose(ub=b, cloth=(i in (1, 2)), eyes="blink" if i == 3 else "open"))) for i, b in
+            enumerate((0, 0, 1, 1))]
+    walk = [F(A(p, grip=(23 - p["swing"] // 2, 18), tilt=-p["swing"] * 3)) for p in walk_poses()]
+    attack = [
+        F(A(hpose(near=(1, 0), far=(-1, 0)), grip=(24, 16), arrow=True, draw=1)),          # nock
+        F(A(hpose(lean=-1, near=(2, 0), far=(-2, 0)), grip=(25, 16), arrow=True, draw=5)),  # full draw
+        F(A(hpose(lean=-1, near=(2, 0), far=(-2, 0)), grip=(25, 16), pull=(13, 15), fx="release")),  # release
+        F(A(hpose(near=(2, 0), far=(-2, 0)), grip=(24, 17), pull=(14, 17))),
+        F(A(hpose(near=(1, 0), far=(-1, 0)), grip=(23, 18))),
+    ]
+    hurt_p = hpose(lean=-1, hdx=-1, eyes="pain")
+    hurt = [F(flash(A(hurt_p, grip=(22, 19), tilt=10))), F(A(hurt_p, grip=(22, 19), tilt=10))]
+    death = [
+        F(A(hpose(lean=-1, hdx=-1, hdy=-1, eyes="pain", far=(-2, 0)), grip=(21, 18), tilt=15)),
+        F(A(hpose(kneel=True, eyes="pain"), grip=(22, 20), tilt=20)),
+        F(A(hpose(kneel=True, ub=1, hdx=1, hdy=1, eyes="blink"), grip=(22, 23), tilt=50)),
+        F(archer_lying(-1)),
+        F(archer_lying(0)),
+        F(archer_lying(1)),
+    ]
+    cast = [
+        F(A(hpose(near=(1, 0), far=(-1, 0)), grip=(23, 13), tilt=-35, arrow=True, draw=1)),
+        F(A(hpose(lean=-1, near=(2, 0), far=(-2, 0), cloth=1), grip=(24, 12), tilt=-45, arrow=True, draw=4)),
+        F(A(hpose(lean=-1, near=(2, 0), far=(-2, 0), cloth=1), grip=(24, 12), tilt=-45, pull=(14, 12),
+            fx="volley")),
+        F(A(hpose(near=(1, 0), far=(-1, 0)), grip=(23, 14), tilt=-30, arrow=True, draw=2)),
+    ]
+    return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
+
+
+# ---------------------------------------------------------------- HUNTER
+# brown hood with a pale fur rim, fur mantle, dark leather, khaki trousers, knives, bow on the back
+HUNT3_HEAD = [
+    "..bbb......",
+    ".bcccbb....",
+    "bccccbbba..",
+    "bcccbbbbbaa",
+    "bccbbzzzzza",
+    "abbbz446665",
+    "abbbz469695",
+    "abbbz466665",
+    ".aabyz4555.",
+    "..aayyzzy..",
+    "....yyy....",
+]
+HUNT3_LEATHER = "kab"
+HUNT3_PANTS = "myz"
+HUNT3_BOOT = "abc"
+HUNT3_SPANS = [(-4, 4), (-5, 4), (-5, 4), (-5, 4), (-4, 4), (-4, 4), (-4, 4), (-4, 4), (-4, 4), (-4, 4)]
+
+
+def hunter_v3(p: dict, nh=None, knife: float = 30, knife_shown: bool = True, fh=None,
+              fx: str | None = None) -> Canvas:
+    c = Canvas(32, 32)
+    ub, lx = p["ub"], p["lean"]
+    if p["kneel"]:
+        ub += 3
+    # bow slung across the back (arc behind the far shoulder)
+    for i in range(16):
+        x = CX - 6 + lx + round(i * 0.35 - 2.2 * math.sin(i / 15 * math.pi))
+        c.set(x, 8 + ub + i, "c" if i < 7 else "b")
+    c.line(CX - 6 + lx, 8 + ub, CX - 1 + lx, 23 + ub, "z")
+    # short fur-trimmed cape behind
+    fl = p["cloth"]
+    for y in range(14 + ub, 25):
+        k = y - 14 - ub
+        x0 = round(CX - 6 + lx - k * 0.25 - (fl if k > 5 else 0))
+        for x in range(x0, CX + lx):
+            c.set(x, y, "y" if x == x0 else ("m" if x < x0 + 3 else "k"))
+    legs_v3(c, p, HUNT3_PANTS, HUNT3_BOOT)
+    block_v3(c, CX + lx, 13 + ub, HUNT3_SPANS, HUNT3_LEATHER, lit_rows=1)
+    # crossed belts with spare knives, khaki sash
+    for k in range(6):
+        c.set(CX - 3 + lx + k, 15 + ub + k, "y" if k % 2 else "m")
+    c.set(CX - 2 + lx, 18 + ub, "p")
+    c.set(CX - 2 + lx, 19 + ub, "b")
+    ring_v3(c, 20 + ub, CX - 4 + lx, CX + 4 + lx, "zyy", sag=1.0)
+    c.set(CX + 1 + lx, 21 + ub, "q")
+    # fur mantle over the shoulders: pale grey-beige tufts
+    for y in range(11, 18):
+        for x in range(CX - 7, CX + 8):
+            nx, ny = (x + 0.5 - (CX + 0.2)) / 6.3, (y + 0.5 - 14.4) / 2.8
+            if nx * nx + ny * ny <= 1:
+                col = "W" if (ny < -0.3 and nx < -0.2) else ("z" if nx < 0.5 else "y")
+                if ny > 0.5:
+                    col = "y" if nx < 0.4 else "m"
+                c.set(x + lx, y + ub, col)
+    for x in range(CX - 5, CX + 6):
+        if (x - CX) % 3 == 1:
+            c.set(x + lx, 17 + ub, None if c.get(x + lx, 18 + ub) is None else "k")
+        elif (x - CX) % 3 == 0:
+            c.set(x + lx, 18 + ub, "y" if x < CX else "m")
+    c.stamp(HUNT3_HEAD, 10 + lx + p["hdx"], 2 + ub + p["hdy"],
+            remap={"4": "h", "5": "i", "6": "j", "9": "o" if p["eyes"] != "blink" else "h"})
+    if p["eyes"] == "pain":
+        for (x, y) in ((7, 6), (9, 6)):
+            c.set(10 + lx + p["hdx"] + x, 2 + ub + p["hdy"] + y, "h")
+            c.set(10 + lx + p["hdx"] + x, 1 + ub + p["hdy"] + y, "a")
+    nhx, nhy = nh if nh else (20 - p["swing"] // 2, 21)
+    nhx, nhy = nhx + lx, nhy + ub
+    if fh:
+        arm_v3(c, CX - 2 + lx, 15 + ub, fh[0] + lx, fh[1] + ub, "kab", cuff="y")
+    if knife_shown:
+        draw_knife(c, nhx, nhy, knife)
+    arm_v3(c, CX + 3 + lx, 15 + ub, nhx, nhy, "kab", cuff="y")
+    if fx == "throw":
+        sparks(c, ((26, 13, "W"), (28, 13, "z"), (29, 14, "W"), (24, 12, "z")))
+    if fx in ("call", "call2"):
+        d = 1 if fx == "call2" else 0
+        sparks(c, ((24, 8, "W"), (25, 9, "W"), (25, 10, "W"), (24, 11, "W"),
+                   (27, 7, "z"), (28, 8, "z"), (28, 9, "z"), (28, 10, "z"), (27, 11, "z")), 0, d)
+    if fx == "call2":
+        sparks(c, ((30, 7, "y"), (30, 12, "y"), (31, 9, "y"), (27, 3, "s")))
+    return c
+
+
+def hunter_lying(stage: int) -> Canvas:
+    c = Canvas(32, 32)
+    draw_knife(c, 22, 19, 10)
+    lying_v3(c, stage, "kab", "hij", HUNT3_LEATHER, HUNT3_PANTS, HUNT3_BOOT, collar="myz",
+             hood="abcz")
+    return c
+
+
+def hunter_sheet_v3() -> Canvas:
+    F = finish
+    Hn = hunter_v3
+    idle = [F(Hn(hpose(ub=b, cloth=(i in (1, 2)), eyes="blink" if i == 3 else "open"))) for i, b in
+            enumerate((0, 0, 1, 1))]
+    walk = [F(Hn(p, knife=30 + p["swing"] * 8)) for p in walk_poses()]
+    attack = [
+        F(Hn(hpose(lean=-1, near=(1, 0), far=(-1, 0)), nh=(10, 10), knife=-150)),             # wind-up
+        F(Hn(hpose(lean=-1, ub=-1, near=(1, 0), far=(-2, 0)), nh=(12, 6), knife=-120)),
+        F(Hn(hpose(lean=1, ub=1, near=(2, 0), far=(-2, 0)), nh=(24, 14), knife_shown=False, fx="throw")),
+        F(Hn(hpose(lean=1, ub=1, near=(2, 0), far=(-2, 0)), nh=(22, 19), knife_shown=False)),
+        F(Hn(hpose(near=(1, 0), far=(-1, 0)), nh=(20, 21), knife=30)),
+    ]
+    hurt_p = hpose(lean=-1, hdx=-1, eyes="pain")
+    hurt = [F(flash(Hn(hurt_p, nh=(18, 20), knife=60))), F(Hn(hurt_p, nh=(18, 20), knife=60))]
+    death = [
+        F(Hn(hpose(lean=-1, hdx=-1, hdy=-1, eyes="pain", far=(-2, 0)), nh=(17, 19), knife=80)),
+        F(Hn(hpose(kneel=True, eyes="pain"), nh=(20, 21), knife=60)),
+        F(Hn(hpose(kneel=True, ub=1, hdx=1, hdy=1, eyes="blink"), nh=(21, 23), knife_shown=False)),
+        F(hunter_lying(-1)),
+        F(hunter_lying(0)),
+        F(hunter_lying(1)),
+    ]
+    cast = [
+        F(Hn(hpose(), nh=(20, 10), knife_shown=False)),                                       # hand to mouth
+        F(Hn(hpose(), nh=(20, 10), knife_shown=False, fx="call")),
+        F(Hn(hpose(ub=-1, near=(1, 0), far=(-1, 0)), nh=(23, 4), knife_shown=False, fx="call2")),
+        F(Hn(hpose(near=(1, 0), far=(-1, 0)), nh=(22, 8), knife_shown=False)),
     ]
     return build_sheet([idle, walk, attack, hurt, death, cast], 32, 32)
 
@@ -2599,6 +2851,168 @@ def ruin_pillar() -> Canvas:
 
 
 # ======================================================================================
+# Decor (cave) - style v2, 3/4 view, base (bottom outline row) on h-2, no baked shadows
+# ======================================================================================
+def stone(c: Canvas, cx: float, cy: float, rx: float, ry: float, ramp: str = "mnp", top: float = 0.45) -> None:
+    """Small 3/4 stone: dark lower-right side, mid front, light top face (upper-left)."""
+    for y in range(int(cy - ry) - 1, int(cy + ry) + 2):
+        for x in range(int(cx - rx) - 1, int(cx + rx) + 2):
+            nx, ny = (x + 0.5 - cx) / rx, (y + 0.5 - cy) / ry
+            if nx * nx + ny * ny > 1:
+                continue
+            if ny < -top + 0.25 * nx and nx < 0.6:
+                col = ramp[2]
+            elif nx * 0.7 + ny * 0.8 > 0.45:
+                col = ramp[0]
+            else:
+                col = ramp[1]
+            c.set(x, y, col)
+
+
+BONES = [
+    "................",
+    "................",
+    "................",
+    "......zzzz......",
+    ".....zWWzzz.....",
+    "....zWzzzzzy....",
+    "....zzzzzzzy....",
+    "....zkkzkkzy..zz",
+    "....zkkzkkyy.zzy",
+    "....yzzkzzyy.zy.",
+    ".zz..yzzzyy.zy..",
+    "zWzz.zyzyzy.y...",
+    "zyzzzzzzzzyzzz..",
+    ".y..yyyyyyyyzWzy",
+]
+
+
+def bones() -> Canvas:
+    """16x16 skull (3/4: cranium top lit, dark sockets) on two long bones."""
+    c = Canvas(16, 16)
+    c.stamp(BONES, 0, 0)
+    return finish(c)
+
+
+def crystal() -> Canvas:
+    """16x24 glowing crystal cluster: three violet/blue prisms on a stone base, lit left facets."""
+    c = Canvas(16, 24)
+
+    def prism(x0: int, w: int, top: int, bottom: int, lean: int, ramp: str) -> None:
+        # ramp = dark, mid, light, glow; pointed tip, left facet lit, right facet dark
+        h = bottom - top
+        for y in range(top, bottom + 1):
+            t = (y - top) / max(1, h)
+            sx = round(lean * (1 - t))
+            if y - top < 2:  # tip
+                ww = 1 if y == top else max(1, w - 2)
+                xs = x0 + sx + (w - ww) // 2
+                for x in range(xs, xs + ww):
+                    c.set(x, y, ramp[3] if x == xs else ramp[2])
+                continue
+            for i in range(w):
+                u = i / max(1, w - 1)
+                col = ramp[2] if u < 0.34 else (ramp[1] if u < 0.67 else ramp[0])
+                c.set(x0 + sx + i, y, col)
+            c.set(x0 + sx, y, ramp[2])
+        # glints
+        c.set(x0 + round(lean * 0.6), top + 3, ramp[3])
+        c.set(x0 + round(lean * 0.5), top + 4, ramp[3])
+
+    prism(1, 4, 10, 20, -1, "KLMN")      # small violet, leaning left
+    prism(10, 4, 8, 20, 2, "ABCW")       # blue, leaning right
+    prism(5, 5, 2, 20, 0, "LMNW")        # tall violet centre
+    # stone base
+    stone(c, 5.5, 20.4, 5.0, 1.9)
+    stone(c, 11.5, 20.6, 3.6, 1.6)
+    for x in range(16):
+        for y in (22, 23):
+            c.set(x, y, None)
+    # floating glow sparks (opaque palette pixels, no alpha)
+    c = finish(c)
+    for (x, y, col) in ((1, 5, "N"), (14, 4, "C"), (13, 1, "W")):
+        c.set(x, y, col)
+    return c
+
+
+def stalagmite() -> Canvas:
+    """16x32 stalagmite: tapered stone cone, lit left, drip rings a tone darker, wide base."""
+    c = Canvas(16, 32)
+    top, bottom = 3, 29
+    for y in range(top, bottom + 1):
+        t = (y - top) / (bottom - top)
+        hw = 0.6 + 5.6 * t ** 1.25
+        cx = 7.6 + 0.8 * math.sin(t * 2.4)
+        x0, x1 = round(cx - hw), round(cx + hw)
+        for x in range(x0, x1 + 1):
+            u = (x - x0) / max(1, x1 - x0)
+            col = "p" if u < 0.3 else ("n" if u < 0.72 else "m")
+            c.set(x, y, col)
+    # drip rings (a tone darker, curving down in the middle: 3/4)
+    for yr in (10, 16, 22):
+        row = [x for x in range(16) if c.get(x, yr) is not None]
+        if not row:
+            continue
+        a, b = row[0], row[-1]
+        for x in range(a, b + 1):
+            u = (x - a) / max(1, b - a)
+            y = yr + round(math.sin(math.pi * u))
+            if c.get(x, y) is not None:
+                if c.get(x, y) != "m":
+                    c.set(x, y, DARKER[c.get(x, y)])
+    c.set(7, 3, "W")
+    c.set(7, 5, "p")
+    # base stones
+    stone(c, 3.0, 28.4, 2.6, 1.8)
+    stone(c, 13.0, 28.6, 2.4, 1.6)
+    for x in range(16):
+        for y in (30, 31):
+            c.set(x, y, None)
+    return finish(c)
+
+
+def cave_rubble() -> Canvas:
+    """16x16 small stones scattered in a loose pile (warm grey, lit tops)."""
+    c = Canvas(16, 16)
+    for (x, y, rx, ry) in ((5.0, 10.6, 3.4, 2.6), (10.6, 11.8, 2.6, 1.9), (8.4, 8.0, 2.2, 1.8),
+                           (2.4, 12.6, 1.6, 1.2), (13.4, 9.2, 1.5, 1.2)):
+        stone(c, x, y, rx, ry)
+    for (x, y) in ((4, 9), (9, 7)):
+        c.set(x, y, "W")
+    for x in range(16):
+        c.set(x, 14, None)
+        c.set(x, 15, None)
+    return finish(c)
+
+
+def cave_dirt_patch() -> Canvas:
+    """48x32 cave ground decal: darker trampled earth, soft ragged edge, no outline."""
+    w, h = 48, 32
+    c = Canvas(w, h)
+    m = blob_mask(w, h, 24, 16, 19.5, 12.0, seed=41, wobble=0.24)
+    for y in range(h):
+        for x in range(w):
+            d = m[y][x]
+            if d > 0.2:
+                c.px[y][x] = "m"
+            elif d > 0:
+                c.px[y][x] = "Q"
+    rnd = random.Random(42)
+    for y in range(h):
+        for x in range(w):
+            if c.px[y][x] == "Q" and 0.1 < m[y][x] and rnd.random() < 0.15:
+                c.px[y][x] = "m"
+    # pebbles and scuffs (a tone lighter / darker, no outline)
+    for (x, y) in ((15, 12), (32, 19), (25, 9)):
+        c.set(x, y, "n")
+        c.set(x + 1, y, "Q")
+        c.set(x, y + 1, "m")
+    for (x, y) in ((20, 18), (27, 14)):
+        c.rect(x, y, 3, 1, "Q")
+    return c
+
+
+# ======================================================================================
 # Previews (scratch only, --preview DIR)
 # ======================================================================================
 Pixel = tuple[int, int, int, int]
@@ -2776,8 +3190,8 @@ def meadow_scene(ground: Canvas, sh: dict[str, Canvas], decor: dict[str, Canvas]
         ground_decals = [("dirt_patch", 7), ("grass_patch", 9), ("flowers", 8), ("mushroom", 3)]
         props = [("fir_tree", 7), ("bush", 6), ("rock", 4), ("stump", 3), ("log", 2)]
     else:
-        ground_decals = [("dirt_patch", 6), ("mushroom", 5)]
-        props = [("rock", 9), ("ruin_pillar", 5)]
+        ground_decals = [("cave_dirt_patch", 7), ("mushroom", 3), ("cave_rubble", 6)]
+        props = [("rock", 5), ("ruin_pillar", 2), ("stalagmite", 6), ("crystal", 5), ("bones", 5)]
     hero_zone = (60, 220, 300, 470)  # keep the middle readable
 
     def spot(margin: int = 10) -> tuple[int, int]:
@@ -2868,16 +3282,18 @@ def write_previews(out: Path, sheets: dict[str, Canvas], singles: dict[str, Canv
     btn.px[0][0] = "k"
     preview_pair(ic, btn, 5, out / "hud_icons.png")
     # decor
-    names = ("fir_tree", "bush", "rock", "stump", "log", "flowers", "mushroom", "ruin_pillar")
+    names = ("fir_tree", "bush", "rock", "stump", "log", "flowers", "mushroom", "ruin_pillar",
+             "bones", "crystal", "stalagmite", "cave_rubble")
     dc = Canvas(sum(decor[n].w + 4 for n in names), 48)
     x = 0
     for n in names:
         dc.blit(decor[n], x, 48 - decor[n].h)
         x += decor[n].w + 4
     preview_pair(dc, grass, 4, out / "decor.png")
-    dl = Canvas(48 + 32 + 8, 32)
+    dl = Canvas(48 + 32 + 8 + 56, 32)
     dl.blit(decor["dirt_patch"], 0, 0)
     dl.blit(decor["grass_patch"], 56, 4)
+    dl.blit(decor["cave_dirt_patch"], 96, 0)
     write_png(hstack(upscale(compose(dl, grass, None), 4), upscale(compose(dl, cave, None), 4)), out / "decals.png")
     # ground tiles 3x3 at 2x (seams) side by side
     tiles = []
@@ -2898,16 +3314,16 @@ def main() -> None:
         preview_dir.mkdir(parents=True, exist_ok=True)
 
     sheets = {
-        "warrior": (warrior_sheet(), "sprites/characters/warrior.png"),
+        "warrior": (warrior_sheet_v3(), "sprites/characters/warrior.png"),
         "goblin": (goblin_sheet(), "sprites/enemies/goblin.png"),
         "wolf": (wolf_sheet(), "sprites/enemies/wolf.png"),
         "skeleton": (skeleton_sheet(), "sprites/enemies/skeleton.png"),
         "slime": (slime_sheet(), "sprites/enemies/slime.png"),
         "boss": (guardian_sheet(), "sprites/enemies/forest_guardian.png"),
-        "mage": (mage_sheet(), "sprites/characters/mage.png"),
-        "healer": (healer_sheet(), "sprites/characters/healer.png"),
-        "archer": (archer_sheet(), "sprites/characters/archer.png"),
-        "hunter": (hunter_sheet(), "sprites/characters/hunter.png"),
+        "mage": (mage_sheet_v3(), "sprites/characters/mage.png"),
+        "healer": (healer_sheet_v3(), "sprites/characters/healer.png"),
+        "archer": (archer_sheet_v3(), "sprites/characters/archer.png"),
+        "hunter": (hunter_sheet_v3(), "sprites/characters/hunter.png"),
         "wolf_companion": (wolf_companion_sheet(), "sprites/companions/wolf_companion.png"),
     }
     for sh, rel in sheets.values():
@@ -2939,7 +3355,9 @@ def main() -> None:
         save(cv, f"ui/hud_icons/{name}.png")
     decor = {"fir_tree": fir_tree(), "bush": bush(), "rock": rock(), "stump": stump(), "log": log(),
              "flowers": flowers(), "mushroom": mushroom(), "ruin_pillar": ruin_pillar(),
-             "dirt_patch": dirt_patch(), "grass_patch": grass_patch()}
+             "dirt_patch": dirt_patch(), "grass_patch": grass_patch(),
+             "bones": bones(), "crystal": crystal(), "stalagmite": stalagmite(), "cave_rubble": cave_rubble(),
+             "cave_dirt_patch": cave_dirt_patch()}
     for name, cv in decor.items():
         save(cv, f"sprites/decor/{name}.png")
 

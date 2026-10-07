@@ -9,9 +9,9 @@
 
 ## Скриншоты
 
-| Меню | Выбор героя | Бой (навык мага) | Повышение уровня | Босс |
-|---|---|---|---|---|
-| ![Меню](docs/screenshots/01_menu.png) | ![Выбор героя](docs/screenshots/02_heroes.png) | ![Бой](docs/screenshots/03_battle.png) | ![Повышение уровня](docs/screenshots/04_level_up.png) | ![Босс](docs/screenshots/05_boss.png) |
+| Меню | Выбор героя | Бой (навык мага) | Повышение уровня | Босс | Пещера (охотник и волк) |
+|---|---|---|---|---|---|
+| ![Меню](docs/screenshots/01_menu.png) | ![Выбор героя](docs/screenshots/02_heroes.png) | ![Бой](docs/screenshots/03_battle.png) | ![Повышение уровня](docs/screenshots/04_level_up.png) | ![Босс](docs/screenshots/05_boss.png) | ![Пещера](docs/screenshots/06_cave.png) |
 
 ## Структура репозитория
 
@@ -72,9 +72,13 @@ CI (`.github/workflows/build.yml`): на каждый push/PR — тесты и 
 - Игровой арт генерируется кодом: `python3 tools/art/generate_sprites.py` (подробности и упрощения — `docs/art/GENERATED_ART.md`). Декор уровней расставляется по данным (`decor` в `levels.json`), тени рисует код.
 - Баннер меню, портреты и эмблемы классов нарезаются из ключарта: `godot --headless --script tools/art/import_keyart.gd` (координаты — `tools/art/keyart_regions.json`).
 
+## Технический долг
+
+Отложенные решения, упрощения и места для оптимизации — `docs/TECH_DEBT.md` (с приоритетами P1–P3 и триггерами «когда браться»). Пополняется по ходу разработки; куратор — агент `tech-debt`.
+
 ## Агенты Claude Code
 
-Эталонные агенты лежат в `tools/claude/agents/` (developer, tester, designer, manager); локальная папка `.claude/` не коммитится и собирается одной командой:
+Эталонные агенты лежат в `tools/claude/agents/` (developer, tester, designer, artist, manager, tech-debt); локальная папка `.claude/` не коммитится и собирается одной командой:
 
 ```bash
 tools/claude/setup.sh                               # только агенты -> .claude/agents

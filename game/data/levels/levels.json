@@ -68,9 +68,14 @@
 			"map": { "width": 960, "height": 1600, "tile": "res://assets/tilesets/cave.png" },
 			"background": "#5e5244",
 			"decor": [
-				{ "sprite": "res://assets/sprites/decor/rock.png", "count": 26, "layer": "object" },
-				{ "sprite": "res://assets/sprites/decor/ruin_pillar.png", "count": 10, "layer": "object", "min_spacing": 30 },
-				{ "sprite": "res://assets/sprites/decor/mushroom.png", "count": 14, "layer": "ground" }
+				{ "sprite": "res://assets/sprites/decor/cave_dirt_patch.png", "count": 22, "layer": "ground" },
+				{ "sprite": "res://assets/sprites/decor/cave_rubble.png", "count": 20, "layer": "ground" },
+				{ "sprite": "res://assets/sprites/decor/mushroom.png", "count": 10, "layer": "ground" },
+				{ "sprite": "res://assets/sprites/decor/stalagmite.png", "count": 18, "layer": "object", "min_spacing": 26 },
+				{ "sprite": "res://assets/sprites/decor/crystal.png", "count": 14, "layer": "object", "min_spacing": 22 },
+				{ "sprite": "res://assets/sprites/decor/bones.png", "count": 14, "layer": "object" },
+				{ "sprite": "res://assets/sprites/decor/rock.png", "count": 14, "layer": "object" },
+				{ "sprite": "res://assets/sprites/decor/ruin_pillar.png", "count": 6, "layer": "object", "min_spacing": 30 }
 			],
 			"spawn_points": [{ "x": 480, "y": 800 }],
 			"difficulty": 3,
