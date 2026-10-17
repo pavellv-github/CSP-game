@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Sets up the local Claude Code environment for this project (the single entry point).
 #
-#   tools/claude/setup.sh                 # agents only: tools/claude/agents/*.md -> .claude/agents/
-#   tools/claude/setup.sh --recommended   # + Godot skills, review/commit plugins, Godot MCP server
+#   tools/claude/setup.sh                 # agents and skills: tools/claude/{agents,skills} -> .claude/
+#   tools/claude/setup.sh --recommended   # + Godot skills, review/commit plugins, Godot and FreeLLMAPI MCP servers
 #   tools/claude/setup.sh --all           # + Supabase, Firebase, Aseprite pixel-art plugin
 #   tools/claude/setup.sh --force         # overwrite agents that were edited locally
 #
@@ -10,12 +10,13 @@
 # is not committed (.claude/ is in .gitignore). Re-running is safe.
 #
 # Requirements: Claude Code CLI (`claude`); for --recommended also Node.js (npx) and
-# Godot 4.5.2 (path in $GODOT, used by the Godot MCP server); for --all also Aseprite >= 1.3.
+# Godot 4.5.2 (path in $GODOT, used by the Godot MCP server); for the FreeLLMAPI MCP server
+# a running gateway and $FREELLMAPI_KEY (skipped otherwise); for --all also Aseprite >= 1.3.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SOURCE_AGENTS="$ROOT/tools/claude/agents"
-TARGET_AGENTS="$ROOT/.claude/agents"
+SOURCE_DIR="$ROOT/tools/claude"
+TARGET_DIR="$ROOT/.claude"
 
 # --- Plugins and MCP servers -------------------------------------------------
 # Format: "marketplace-source|plugin@marketplace|why"
@@ -51,26 +52,42 @@ checksum() { shasum -a 256 "$1" | cut -d' ' -f1; }
 
 # Checksums of the versions this script installed: a local file that still matches its
 # recorded checksum was not edited and can be updated safely.
-install_agents() {
-  mkdir -p "$TARGET_AGENTS"
-  local manifest="$TARGET_AGENTS/.installed"
+# install_files <kind> <subdir> <files relative to the subdir...>
+install_files() {
+  local kind="$1" subdir="$2"
+  shift 2
+  local manifest="$TARGET_DIR/$subdir/.installed"
+  mkdir -p "$TARGET_DIR/$subdir"
   touch "$manifest"
-  for source in "$SOURCE_AGENTS"/*.md; do
-    local name target installed
-    name="$(basename "$source")"
-    target="$TARGET_AGENTS/$name"
-    installed="$(grep -E "^$name " "$manifest" | cut -d' ' -f2 || true)"
+  for name in "$@"; do
+    local source="$SOURCE_DIR/$subdir/$name" target="$TARGET_DIR/$subdir/$name" installed
+    installed="$(awk -v n="$name" '$1 == n {print $2}' "$manifest")"
     if [[ -f "$target" && $FORCE -eq 0 ]] && ! cmp -s "$source" "$target" \
         && [[ "$(checksum "$target")" != "$installed" ]]; then
-      echo "  skip   $name (edited locally; use --force to overwrite)"
+      echo "  skip   $kind $name (edited locally; use --force to overwrite)"
       continue
     fi
+    mkdir -p "$(dirname "$target")"
     cp "$source" "$target"
-    grep -vE "^$name " "$manifest" > "$manifest.tmp" || true
+    awk -v n="$name" '$1 != n' "$manifest" > "$manifest.tmp" || true
     echo "$name $(checksum "$target")" >> "$manifest.tmp"
     mv "$manifest.tmp" "$manifest"
-    echo "  agent  $name"
+    echo "  $kind  $name"
   done
+}
+
+install_agents() {
+  local names=()
+  for source in "$SOURCE_DIR"/agents/*.md; do names+=("$(basename "$source")"); done
+  install_files agent agents "${names[@]}"
+}
+
+install_skills() {
+  local names=()
+  for source in "$SOURCE_DIR"/skills/*/SKILL.md; do
+    names+=("$(basename "$(dirname "$source")")/SKILL.md")
+  done
+  install_files skill skills "${names[@]}"
 }
 
 install_plugins() {
@@ -103,8 +120,23 @@ install_godot_mcp() {
   echo "  mcp    godot — run the project, read debug output, inspect scenes ($godot)"
 }
 
-echo "Agents -> .claude/agents"
+# FreeLLMAPI (https://github.com/tashfeenahmed/freellmapi): local gateway to free LLM providers;
+# Claude delegates bulk text generation to it (skill freellm, tools/llm/freellm.py).
+install_freellm_mcp() {
+  local url="${FREELLMAPI_URL:-http://127.0.0.1:3001}"
+  if [[ -z "${FREELLMAPI_KEY:-}" ]]; then
+    echo "  skip   mcp freellmapi: set FREELLMAPI_KEY (unified key from the dashboard $url) and re-run"
+    return
+  fi
+  claude mcp remove freellmapi --scope local >/dev/null 2>&1 || true
+  claude mcp add freellmapi --scope local --transport http "$url/mcp" \
+    --header "Authorization: Bearer $FREELLMAPI_KEY" >/dev/null
+  echo "  mcp    freellmapi — free LLM pool for bulk generation ($url)"
+}
+
+echo "Agents and skills -> .claude/"
 install_agents
+install_skills
 
 if [[ "$MODE" != "agents" ]]; then
   if ! command -v claude >/dev/null; then
@@ -116,6 +148,7 @@ if [[ "$MODE" != "agents" ]]; then
   [[ "$MODE" == "all" ]] && install_plugins "${EXTRA_PLUGINS[@]}"
   echo "MCP servers (local scope)"
   install_godot_mcp
+  install_freellm_mcp
 fi
 
 echo "Done. Restart Claude Code to pick up the changes."
