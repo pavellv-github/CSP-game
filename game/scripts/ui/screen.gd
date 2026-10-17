@@ -2,6 +2,8 @@ class_name Screen
 extends Control
 ## Base for full-screen menus: background, safe-area margins and a scrollable content column.
 
+const CONTENT_WIDTH := 420.0
+
 var content: VBoxContainer
 
 
@@ -14,8 +16,10 @@ func _ready() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var safe := _safe_margins()
-	margin.add_theme_constant_override("margin_left", 16 + int(safe.x))
-	margin.add_theme_constant_override("margin_right", 16 + int(safe.x))
+	# Landscape: keep the content column at most CONTENT_WIDTH wide, centred.
+	var side := 16 + int(safe.x) + maxi(0, int((get_viewport_rect().size.x - CONTENT_WIDTH) * 0.5) - 16)
+	margin.add_theme_constant_override("margin_left", side)
+	margin.add_theme_constant_override("margin_right", side)
 	margin.add_theme_constant_override("margin_top", 16 + int(safe.y))
 	margin.add_theme_constant_override("margin_bottom", 16)
 	add_child(margin)

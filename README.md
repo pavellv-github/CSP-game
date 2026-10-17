@@ -1,13 +1,16 @@
 # Pixel Fantasy Survival — MVP
 
-Мобильная 2D pixel-art survival / action RPG (iOS / Android, portrait) по ТЗ «Technical Specification — MVP v0.1».
+Мобильная 2D pixel-art survival / action RPG (iOS / Android, горизонтальная ориентация) по ТЗ «Technical Specification — MVP v0.1».
 
 - Движок: **Godot 4.5.2** (зафиксирован; смена версии — отдельная задача миграции), typed GDScript
-- Renderer: **Compatibility** (OpenGL ES 3.0), внутреннее разрешение 360×640, nearest-фильтрация, integer scaling
+- Renderer: **Compatibility** (OpenGL ES 3.0), внутреннее разрешение 640×360, nearest-фильтрация, integer scaling
 - Контент полностью data-driven (`game/data/*.json`), сохранения версионированы, игра работает без сети
 - Пять играбельных героев (воин, маг, хилл, лучник, охотник) со своей атакой и навыком; игра на русском
 
 ## Скриншоты
+
+Игра горизонтальная (640×360). Управление: плавающий стик появляется под пальцем в левой нижней области, действия — справа. Актуальные скриншоты, спрайты и элементы дизайна по версиям лежат в Figma: https://www.figma.com/design/oOGt0CIVvhaxkm8a1DHcEw/CSP-game (страница `v0.1.0 · 2026-10-17 · 312ebc2`). На доске Miro остаются схемы и диаграммы механик.
+
 
 | Меню | Выбор героя | Бой (навык мага) | Повышение уровня | Босс | Пещера (охотник и волк) |
 |---|---|---|---|---|---|
@@ -74,19 +77,7 @@ CI (`.github/workflows/build.yml`): на каждый push/PR — тесты и 
 
 ## Технический долг
 
-Отложенные решения, упрощения и места для оптимизации — `docs/TECH_DEBT.md` (с приоритетами P1–P3 и триггерами «когда браться»). Пополняется по ходу разработки; куратор — агент `tech-debt`.
-
-## Агенты Claude Code
-
-Эталонные агенты лежат в `tools/claude/agents/` (developer, tester, designer, artist, manager, tech-debt); локальная папка `.claude/` не коммитится и собирается одной командой:
-
-```bash
-tools/claude/setup.sh                               # только агенты -> .claude/agents
-GODOT=/path/to/Godot tools/claude/setup.sh --recommended   # + Godot-скиллы, ревью/коммиты, Godot MCP
-GODOT=/path/to/Godot tools/claude/setup.sh --all           # + Supabase, Firebase, Aseprite (pixel art)
-```
-
-Плагины и MCP ставятся в scope `local` — только для этой копии репозитория. Список рекомендаций и его состав — в начале `tools/claude/setup.sh`. Изменения агентов вносятся в `tools/claude/agents/` и раздаются повторным запуском скрипта (локально изменённые файлы не перезаписываются без `--force`).
+Отложенные решения, упрощения и места для оптимизации — `docs/TECH_DEBT.md` (с приоритетами P1–P3 и триггерами «когда браться»). Пополняется по ходу разработки.
 
 ## Как устроено (соответствие ТЗ)
 
@@ -109,7 +100,7 @@ GODOT=/path/to/Godot tools/claude/setup.sh --all           # + Supabase, Firebas
 | §27–28 аналитика, Crashlytics | события из ТЗ формирует `AnalyticsEventBridge` по EventBus; `CrashLogger` (Logger API 4.5) отправляет ошибки как non-fatal |
 | §31 состояния | `GameStateManager`: таблица разрешённых переходов, оверлеи ставят игру на паузу |
 | §32 EventBus | враг публикует `enemy_killed` → опыт, лут, аналитика, HUD подписаны независимо |
-| §34 pixel art | 360×640, viewport stretch + integer scale, nearest, snap к пикселям |
+| §34 pixel art | 640×360, viewport stretch + integer scale, nearest, snap к пикселям |
 | §35 ввод | Touch/клавиатура/геймпад → `InputCommand` → `PlayerController` |
 
 ## Что не входит в эту сборку / требует решения

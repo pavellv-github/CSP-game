@@ -1,6 +1,6 @@
 class_name VirtualJoystick
 extends Control
-## Floating joystick: appears where the finger touches inside this control's rect.
+## Floating joystick: hidden until the finger touches inside this control's rect.
 ## Uses raw touch events so it works together with other touch buttons (multitouch).
 
 @export var radius: float = 26.0
@@ -9,13 +9,10 @@ extends Control
 var _touch_index: int = -1
 var _origin: Vector2 = Vector2.ZERO
 var _knob: Vector2 = Vector2.ZERO
-var _rest_position: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_rest_position = Vector2(size.x * 0.5, size.y - radius - 24.0)
-	resized.connect(func() -> void: _rest_position = Vector2(size.x * 0.5, size.y - radius - 24.0))
 
 
 func get_vector() -> Vector2:
@@ -53,8 +50,10 @@ func _input(event: InputEvent) -> void:
 
 
 func _draw() -> void:
-	var center := _origin if _touch_index != -1 else _rest_position
-	var alpha := 0.55 if _touch_index != -1 else 0.25
+	if _touch_index == -1:
+		return # invisible until touched
+	var center := _origin
+	var alpha := 0.55
 	draw_circle(center, radius, Color(1, 1, 1, alpha * 0.35))
 	draw_arc(center, radius, 0.0, TAU, 32, Color(1, 1, 1, alpha), 1.0)
 	draw_circle(center + _knob, radius * 0.42, Color(1, 1, 1, alpha + 0.2))

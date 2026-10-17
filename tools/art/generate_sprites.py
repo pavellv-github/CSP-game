@@ -2511,6 +2511,37 @@ def icon_pause() -> Canvas:
 # HUD stat icons 16x16 (top bar pills: gold, kills, timer, level) - coloured glyph with a
 # light top-left, 1 px dark outline, like the resource icons of the style target
 # ======================================================================================
+def stat_heart() -> Canvas:
+    c = Canvas(16, 16)
+    c.ellipse(5.2, 5.6, 3.6, 3.4, "S")
+    c.ellipse(10.8, 5.6, 3.6, 3.4, "S")
+    for y in range(6, 14):  # lower triangle, narrowing to the tip
+        half = (13.5 - y) * 0.95
+        for x in range(16):
+            if abs(x + 0.5 - 8) <= half:
+                c.set(x, y, "S")
+    c.set(4, 3, "W")
+    c.set(3, 4, "W")
+    c.set(4, 4, "W")
+    c.line(11, 7, 8, 11, "e")
+    return finish(c)
+
+
+def stat_mana() -> Canvas:
+    c = Canvas(16, 16)
+    c.ellipse(8, 10, 4.8, 4.8, "B")
+    for y in range(2, 8):  # drop tip
+        half = (y - 2) * 0.8
+        for x in range(16):
+            if abs(x + 0.5 - 8) <= half:
+                c.set(x, y, "B")
+    c.line(11, 9, 10, 12, "A")
+    c.set(6, 8, "W")
+    c.set(6, 9, "W")
+    c.set(7, 7, "W")
+    return finish(c)
+
+
 def stat_gold() -> Canvas:
     c = Canvas(16, 16)
     c.ellipse(8, 8.5, 6.2, 6.2, "q")          # coin rim (shade)
@@ -3350,7 +3381,8 @@ def main() -> None:
              "use": icon_use(), "pause": icon_pause()}
     for name, cv in icons.items():
         save(cv, f"ui/hud_icons/{name}.png")
-    stat_icons = {"gold": stat_gold(), "kills": stat_kills(), "timer": stat_timer(), "level": stat_level()}
+    stat_icons = {"gold": stat_gold(), "kills": stat_kills(), "timer": stat_timer(), "level": stat_level(),
+                  "heart": stat_heart(), "mana": stat_mana()}
     for name, cv in stat_icons.items():
         save(cv, f"ui/hud_icons/{name}.png")
     decor = {"fir_tree": fir_tree(), "bush": bush(), "rock": rock(), "stump": stump(), "log": log(),

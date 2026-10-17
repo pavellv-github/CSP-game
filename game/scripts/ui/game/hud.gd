@@ -10,7 +10,6 @@ const HUD_ICONS := {"HUD_ATTACK": "attack", "HUD_SKILL": "skill", "HUD_DASH": "d
 var router: InputRouter
 
 var _health_bar: ProgressBar
-var _health_label: Label
 var _xp_bar: ProgressBar
 var _level_label: Label
 var _timer_label: Label
@@ -30,6 +29,8 @@ func setup(input_router: InputRouter, player: Player) -> void:
 	router = input_router
 	_player = player
 	router.joystick = $Controls/Joystick as VirtualJoystick
+	# The player announced its health before the HUD existed.
+	_on_health_changed(player.health.current, player.health.max_health)
 
 
 func _ready() -> void:
@@ -76,18 +77,21 @@ func _build_top_bar() -> void:
 	margin.add_child(column)
 
 	var row := UiKit.hbox(6)
+	# Bars take 1/3 of the screen width: stretch ratio 1 against an empty filler of ratio 2.
 	var bars := UiKit.vbox(2)
 	bars.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bars.size_flags_stretch_ratio = 1.0
 	_health_bar = UiKit.bar(UiKit.HEALTH, 8)
 	_health_bar.step = 0.0
-	_health_label = UiKit.label("", 8, UiKit.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
-	_health_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_health_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_health_bar.add_child(_health_label)
-	bars.add_child(_health_bar)
-	_xp_bar = UiKit.bar(UiKit.XP, 4)
-	bars.add_child(_xp_bar)
+	bars.add_child(_icon_bar("heart", _health_bar))
+	_xp_bar = UiKit.bar(UiKit.XP, 8)
+	bars.add_child(_icon_bar("mana", _xp_bar))
 	row.add_child(bars)
+	var filler := Control.new()
+	filler.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	filler.size_flags_stretch_ratio = 2.0
+	filler.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(filler)
 	var pause := UiKit.button("II", func() -> void: router.press(InputSetup.PAUSE), 24)
 	pause.custom_minimum_size.x = 28
 	var pause_icon := _hud_icon("pause")
@@ -136,6 +140,16 @@ func _build_top_bar() -> void:
 	add_child(_banner)
 
 
+func _icon_bar(icon_name: String, bar: ProgressBar) -> HBoxContainer:
+	var row := UiKit.hbox(3)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(UiKit.icon(HUD_ICON_DIR + icon_name + ".png", 16))
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(bar)
+	return row
+
+
 func _build_controls() -> void:
 	var controls := Control.new()
 	controls.name = "Controls"
@@ -148,8 +162,8 @@ func _build_controls() -> void:
 	var joystick := VirtualJoystick.new()
 	joystick.name = "Joystick"
 	joystick.anchor_left = 0.0
-	joystick.anchor_right = 0.55
-	joystick.anchor_top = 0.55
+	joystick.anchor_right = 0.5
+	joystick.anchor_top = 0.3
 	joystick.anchor_bottom = 1.0
 	controls.add_child(joystick)
 
@@ -193,7 +207,6 @@ func _on_health_changed(current: int, maximum: int) -> void:
 		_health_tween.kill()
 	_health_tween = create_tween()
 	_health_tween.tween_property(_health_bar, "value", float(current), 0.2).set_ease(Tween.EASE_OUT)
-	_health_label.text = "%d / %d" % [current, maximum]
 
 
 func _on_xp_changed(level: int, xp_into_level: int, xp_for_next: int) -> void:

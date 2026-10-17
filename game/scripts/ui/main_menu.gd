@@ -45,12 +45,12 @@ func _add_banner() -> void:
 
 func _build() -> void:
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 150)
+	spacer.custom_minimum_size = Vector2(0, 80)
 	content.add_child(spacer)
 	content.add_child(UiKit.title(Loc.t("GAME_TITLE")))
 	content.add_child(UiKit.label(Loc.t("COMMON_GOLD") % Profile.get_gold(), 10, UiKit.ACCENT, HORIZONTAL_ALIGNMENT_CENTER))
 	var spacer2 := Control.new()
-	spacer2.custom_minimum_size = Vector2(0, 40)
+	spacer2.custom_minimum_size = Vector2(0, 12)
 	content.add_child(spacer2)
 	content.add_child(UiKit.button(Loc.t("MENU_PLAY"), func() -> void: GameStateManager.change_state(State.CHARACTER_SELECTION), 36))
 	content.add_child(UiKit.button(Loc.t("MENU_SETTINGS"), func() -> void: GameStateManager.change_state(State.SETTINGS)))

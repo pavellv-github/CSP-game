@@ -22,8 +22,8 @@ var _finished := false
 var _hp_multiplier := 1.0
 var _damage_multiplier := 1.0
 var _max_alive := 120
-var _spawn_min := 360.0
-var _spawn_max := 420.0
+var _spawn_min := 440.0
+var _spawn_max := 500.0
 var _rng := RandomNumberGenerator.new()
 
 
@@ -38,8 +38,8 @@ func setup(level_definition: LevelDefinition, target: Player, entity_container: 
 	_hp_multiplier = config.get_float("balance.enemy_hp_multiplier", 1.0) * (1.0 + difficulty_steps * config.get_float("balance.difficulty_hp_step", 0.25))
 	_damage_multiplier = config.get_float("balance.enemy_damage_multiplier", 1.0) * (1.0 + difficulty_steps * config.get_float("balance.difficulty_damage_step", 0.15))
 	_max_alive = config.get_int("limits.max_alive_enemies", 120)
-	_spawn_min = config.get_float("limits.spawn_distance_min", 360.0)
-	_spawn_max = config.get_float("limits.spawn_distance_max", 420.0)
+	_spawn_min = config.get_float("limits.spawn_distance_min", 440.0)
+	_spawn_max = config.get_float("limits.spawn_distance_max", 500.0)
 	_group_timers.clear()
 	for group in level.enemy_groups:
 		_group_timers.append(0.0)
