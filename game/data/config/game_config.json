@@ -1,5 +1,5 @@
 {
-	"game_version": "1.0.0",
+	"game_version": "0.1.0",
 	"content_version": 1,
 	"feature_flags": {
 		"auto_attack": true,
